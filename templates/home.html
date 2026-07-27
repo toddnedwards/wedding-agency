@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - WeddingVendors{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <h1>Find Your Perfect Wedding Vendors</h1>
+        <p>Discover talented musicians, photographers, and caricaturists for your special day</p>
+        <div class="hero-buttons">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'accounts:customer_signup' %}" class="btn btn-light btn-lg">Get Started</a>
+                <a href="#vendors" class="btn btn-outline btn-lg">Browse Vendors</a>
+            {% else %}
+                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}" class="btn btn-light btn-lg">Find Vendors</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features">
+    <div class="container">
+        <div class="section-title">
+            <h2>Why Choose WeddingVendors?</h2>
+            <p>Everything you need to plan the perfect wedding</p>
+        </div>
+        
+        <div class="grid grid-3">
+            <div class="card">
+                <div class="text-center">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">⭐</div>
+                    <h4>Verified Professionals</h4>
+                    <p class="text-muted">All vendors are carefully vetted and approved</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="text-center">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
+                    <h4>Easy Communication</h4>
+                    <p class="text-muted">Send enquiries and get responses directly</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="text-center">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📍</div>
+                    <h4>Local Expertise</h4>
+                    <p class="text-muted">Find vendors in your area with local knowledge</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Vendors Section -->
+<section id="vendors" style="background-color: var(--light-bg);">
+    <div class="container">
+        <div class="section-title">
+            <h2>Our Vendor Categories</h2>
+            <p>Choose from a variety of talented professionals</p>
+        </div>
+        
+        <div class="grid grid-3">
+            <!-- Musicians -->
+            <div class="card">
+                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;">🎸</div>
+                <h3 style="text-align: center;">Musicians</h3>
+                <p class="text-muted text-center">Piano, violin, acoustic, and more</p>
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}" class="btn btn-primary w-full">Browse Musicians</a>
+                </div>
+            </div>
+            
+            <!-- Photographers -->
+            <div class="card">
+                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;">📸</div>
+                <h3 style="text-align: center;">Photographers</h3>
+                <p class="text-muted text-center">Professional photography and videography</p>
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <a href="{% url 'bookings:vendor_list' vendor_type='photographers' %}" class="btn btn-primary w-full">Browse Photographers</a>
+                </div>
+            </div>
+            
+            <!-- Caricaturists -->
+            <div class="card">
+                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;">🎨</div>
+                <h3 style="text-align: center;">Caricaturists</h3>
+                <p class="text-muted text-center">Fun caricature drawings for your guests</p>
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <a href="{% url 'bookings:vendor_list' vendor_type='caricaturists' %}" class="btn btn-primary w-full">Browse Caricaturists</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section>
+    <div class="container">
+        <div class="card" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; text-align: center;">
+            <h2 style="color: white;">Ready to Find Your Vendors?</h2>
+            <p style="margin: 1rem 0; opacity: 0.95;">Start browsing our directory or post your event details</p>
+            {% if not user.is_authenticated %}
+                <div style="margin-top: 1.5rem;">
+                    <a href="{% url 'accounts:customer_signup' %}" class="btn btn-light btn-lg">Create Account</a>
+                </div>
+            {% else %}
+                <div style="margin-top: 1.5rem;">
+                    <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}" class="btn btn-light btn-lg">Start Browsing</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section style="background-color: var(--light-bg);">
+    <div class="container">
+        <div class="section-title">
+            <h2>How It Works</h2>
+            <p>Simple steps to find your perfect vendors</p>
+        </div>
+        
+        <div class="grid grid-4">
+            <div class="card text-center">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">1️⃣</div>
+                <h4>Sign Up</h4>
+                <p class="text-muted small">Create your account in seconds</p>
+            </div>
+            
+            <div class="card text-center">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">2️⃣</div>
+                <h4>Browse</h4>
+                <p class="text-muted small">Explore our vendor directory</p>
+            </div>
+            
+            <div class="card text-center">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">3️⃣</div>
+                <h4>Enquire</h4>
+                <p class="text-muted small">Send enquiries to vendors</p>
+            </div>
+            
+            <div class="card text-center">
+                <div style="font-size: 2.5rem; margin-bottom: 1rem;">4️⃣</div>
+                <h4>Book</h4>
+                <p class="text-muted small">Confirm your bookings</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
