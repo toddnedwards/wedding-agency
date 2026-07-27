@@ -2,136 +2,149 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
-class Booking(models.Model):
-    """Booking model for wedding services"""
+class Enquiry(models.Model):
+    """Enquiry model for wedding services - vendors must confirm availability"""
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
+        ('pending', 'Pending - Awaiting Vendor Response'),
+        ('viewed', 'Viewed by Vendor'),
+        ('available', 'Available - Vendor Confirmed'),
+        ('unavailable', 'Unavailable - Vendor Declined'),
+        ('booked', 'Booked - Contract Signed'),
         ('cancelled', 'Cancelled'),
     ]
     
-    PAYMENT_STATUS = [
-        ('pending', 'Pending'),
-        ('partial', 'Partial'),
-        ('paid', 'Paid'),
-    ]
+    # Customer details
+    customer_name = models.CharField(max_length=200)
+    customer_email = models.EmailField()
+    customer_phone = models.CharField(max_length=20)
+    customer_user = models.ForeignKey('accounts.CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='enquiries')
     
-    customer = models.ForeignKey('accounts.CustomUser', on_delete=models.CASCADE, related_name='bookings')
-    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='bookings')
-    event_date = models.DateTimeField()
+    # Vendor details
+    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='enquiries')
+    
+    # Event details
+    event_date = models.DateField()
+    event_time = models.TimeField()
+    event_type = models.CharField(max_length=200)  # Wedding, Birthday, Corporate, etc.
     event_location = models.CharField(max_length=300)
-    event_details = models.TextField()
+    venue_name = models.CharField(max_length=200, blank=True)
+    county = models.CharField(max_length=100, blank=True)
     
+    # Enquiry details
+    details = models.TextField(help_text="Additional information about the event and requirements")
+    special_requirements = models.TextField(blank=True)
+    
+    # Status tracking
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='pending')
+    vendor_viewed = models.BooleanField(default=False)
+    vendor_viewed_date = models.DateTimeField(null=True, blank=True)
     
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Vendor response
+    vendor_response = models.TextField(blank=True, help_text="Vendor's response to the enquiry")
+    vendor_availability_note = models.TextField(blank=True)
     
-    deposit_required = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    deposit_paid = models.BooleanField(default=False)
+    # Admin tracking
+    admin_notified = models.BooleanField(default=False)
+    admin_notified_date = models.DateTimeField(null=True, blank=True)
+    admin_notes = models.TextField(blank=True, help_text="Admin notes for follow-up")
+    needs_followup = models.BooleanField(default=True)
+    followup_date = models.DateTimeField(null=True, blank=True)
     
-    notes = models.TextField(blank=True)
-    special_requests = models.TextField(blank=True)
-    
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['-event_date']
+        ordering = ['-created_at']
+        verbose_name_plural = 'Enquiries'
     
     def __str__(self):
-        return f"Booking #{self.id} - {self.vendor.business_name} - {self.event_date.strftime('%Y-%m-%d')}"
+        return f"Enquiry #{self.id} - {self.customer_name} for {self.vendor.business_name}"
     
     def is_upcoming(self):
-        """Check if booking is in the future"""
-        return self.event_date > timezone.now()
+        """Check if event is in the future"""
+        from datetime import datetime
+        event_datetime = datetime.combine(self.event_date, self.event_time)
+        return event_datetime > timezone.now()
     
     def days_until_event(self):
         """Get days until event"""
+        from datetime import datetime
+        event_datetime = datetime.combine(self.event_date, self.event_time)
         if not self.is_upcoming():
             return 0
-        return (self.event_date - timezone.now()).days
+        return (event_datetime.date() - timezone.now().date()).days
     
-    def get_remaining_amount(self):
-        """Get remaining amount to be paid"""
-        return self.total_amount - self.paid_amount
+    def mark_as_viewed(self):
+        """Mark enquiry as viewed by vendor"""
+        self.vendor_viewed = True
+        self.vendor_viewed_date = timezone.now()
+        self.status = 'viewed'
+        self.save()
 
 
-class BookingInvoice(models.Model):
-    """Invoice for bookings"""
-    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='invoice')
-    invoice_number = models.CharField(max_length=50, unique=True)
-    issue_date = models.DateTimeField(auto_now_add=True)
-    due_date = models.DateTimeField()
-    
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    paid = models.BooleanField(default=False)
-    paid_date = models.DateTimeField(null=True, blank=True)
-    
-    def __str__(self):
-        return self.invoice_number
-
-
-class BookingPayment(models.Model):
-    """Track individual payments for a booking"""
-    PAYMENT_METHOD = [
-        ('credit_card', 'Credit Card'),
-        ('bank_transfer', 'Bank Transfer'),
-        ('cash', 'Cash'),
-        ('check', 'Check'),
+class EnquiryResponse(models.Model):
+    """Track vendor responses to enquiries"""
+    RESPONSE_CHOICES = [
+        ('available', 'Available'),
+        ('unavailable', 'Unavailable'),
+        ('awaiting', 'Awaiting Confirmation'),
     ]
     
-    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='payments')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD)
-    transaction_id = models.CharField(max_length=100, blank=True)
-    payment_date = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True)
+    enquiry = models.OneToOneField(Enquiry, on_delete=models.CASCADE, related_name='response')
+    response_status = models.CharField(max_length=20, choices=RESPONSE_CHOICES)
+    response_message = models.TextField()
+    suggested_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    response_date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        ordering = ['-payment_date']
+        ordering = ['-response_date']
     
     def __str__(self):
-        return f"Payment of ${self.amount} for Booking #{self.booking.id}"
+        return f"Response to Enquiry #{self.enquiry.id}"
 
 
-class BookingReminder(models.Model):
-    """Reminders for upcoming bookings and certificate expirations"""
-    REMINDER_TYPE = [
-        ('booking', 'Booking Reminder'),
-        ('certificate', 'Certificate Expiry'),
-        ('payment', 'Payment Due'),
+class EnquiryFollowUp(models.Model):
+    """Track follow-ups on enquiries"""
+    FOLLOWUP_TYPE = [
+        ('admin_to_vendor', 'Admin Follow-up with Vendor'),
+        ('admin_to_customer', 'Admin Follow-up with Customer'),
+        ('vendor_reminder', 'Vendor Reminder'),
     ]
     
-    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='reminders', null=True, blank=True)
-    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE)
-    title = models.CharField(max_length=200)
+    enquiry = models.ForeignKey(Enquiry, on_delete=models.CASCADE, related_name='followups')
+    followup_type = models.CharField(max_length=30, choices=FOLLOWUP_TYPE)
     message = models.TextField()
-    reminder_date = models.DateTimeField()
-    is_sent = models.BooleanField(default=False)
+    scheduled_date = models.DateTimeField()
+    sent = models.BooleanField(default=False)
     sent_date = models.DateTimeField(null=True, blank=True)
     
     class Meta:
-        ordering = ['reminder_date']
+        ordering = ['scheduled_date']
     
     def __str__(self):
-        return f"{self.get_reminder_type_display()} - {self.title}"
+        return f"Follow-up for Enquiry #{self.enquiry.id}"
 
 
-class BookingContract(models.Model):
-    """Contract for bookings"""
-    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='contract')
-    contract_date = models.DateTimeField(auto_now_add=True)
-    contract_content = models.TextField()
-    signed = models.BooleanField(default=False)
-    signed_date = models.DateTimeField(null=True, blank=True)
-    signature_image = models.ImageField(upload_to='signatures/', null=True, blank=True)
+class EnquiryNotification(models.Model):
+    """Track notifications sent for enquiries"""
+    NOTIFICATION_TYPE = [
+        ('vendor_new_enquiry', 'New Enquiry for Vendor'),
+        ('admin_new_enquiry', 'New Enquiry Alert for Admin'),
+        ('customer_confirmation', 'Enquiry Confirmation to Customer'),
+        ('vendor_accepted', 'Vendor Accepted Enquiry'),
+        ('vendor_declined', 'Vendor Declined Enquiry'),
+    ]
+    
+    enquiry = models.ForeignKey(Enquiry, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=30, choices=NOTIFICATION_TYPE)
+    recipient_email = models.EmailField()
+    recipient_name = models.CharField(max_length=200)
+    sent = models.BooleanField(default=False)
+    sent_date = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-sent_date']
     
     def __str__(self):
-        return f"Contract for Booking #{self.booking.id}"
+        return f"{self.get_notification_type_display()} - {self.recipient_email}"
