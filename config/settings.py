@@ -99,8 +99,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'vendor_dashboard'
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+LOGIN_URL = 'accounts:customer_login'
+LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
 REST_FRAMEWORK = {
@@ -124,3 +126,4 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@weddingagency.com')
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@weddingagency.com')
