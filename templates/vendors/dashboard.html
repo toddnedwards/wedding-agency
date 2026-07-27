@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Vendor Dashboard - WeddingVendors{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <h1 class="mb-4">Welcome, {{ request.user.first_name }}!</h1>
+        
+        <!-- Stats -->
+        <div class="grid grid-4 mb-5">
+            <div class="card text-center">
+                <div style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem;">📧</div>
+                <h3>{{ total_enquiries }}</h3>
+                <p class="text-muted small">Total Enquiries</p>
+            </div>
+            
+            <div class="card text-center">
+                <div style="font-size: 2rem; color: var(--secondary-color); margin-bottom: 0.5rem;">👁️</div>
+                <h3>{{ viewed_enquiries }}</h3>
+                <p class="text-muted small">Viewed Enquiries</p>
+            </div>
+            
+            <div class="card text-center">
+                <div style="font-size: 2rem; color: var(--warning); margin-bottom: 0.5rem;">⏳</div>
+                <h3>{{ pending_enquiries }}</h3>
+                <p class="text-muted small">Pending Responses</p>
+            </div>
+            
+            <div class="card text-center">
+                <div style="font-size: 2rem; color: var(--success); margin-bottom: 0.5rem;">⭐</div>
+                <h3>5.0</h3>
+                <p class="text-muted small">Your Rating</p>
+            </div>
+        </div>
+        
+        <!-- Recent Enquiries -->
+        <h2 class="mb-3">Recent Enquiries</h2>
+        
+        {% if enquiries %}
+            <div class="grid grid-2">
+                {% for enquiry in enquiries %}
+                    <div class="card">
+                        <h4>{{ enquiry.customer_name }}</h4>
+                        <p class="text-muted small">📅 {{ enquiry.event_date|date:"d/m/Y" }} at {{ enquiry.event_time }}</p>
+                        
+                        <div class="flex-between mt-2 mb-2">
+                            <span><strong>Type:</strong> {{ enquiry.event_type }}</span>
+                            <span class="badge {% if enquiry.vendor_viewed %}badge-success{% else %}badge-primary{% endif %}">{% if enquiry.vendor_viewed %}Viewed{% else %}New{% endif %}</span>
+                        </div>
+                        
+                        <p><strong>Location:</strong> {{ enquiry.event_location }}</p>
+                        <p class="text-muted small">{{ enquiry.details|truncatewords:15 }}</p>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <a href="#" class="btn btn-primary w-full">Respond to Enquiry</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="text-align: center; padding: 2rem;">
+                <p class="text-muted">No enquiries yet. Your profile will be discovered by customers soon!</p>
+            </div>
+        {% endif %}
+        
+        <!-- Actions -->
+        <div class="mt-5">
+            <a href="{% url 'vendors:profile_edit' %}" class="btn btn-outline btn-lg">Edit Profile</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

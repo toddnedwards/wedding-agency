@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Enquiry Confirmed - WeddingVendors{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+            <h2>Enquiry Sent Successfully!</h2>
+            <p class="text-muted mt-3">Your enquiry has been forwarded to the vendor. You'll receive updates via email soon.</p>
+            
+            <div class="mt-4">
+                <a href="{% url 'bookings:my_enquiries' %}" class="btn btn-primary btn-lg">View My Enquiries</a>
+                <a href="{% url 'home' %}" class="btn btn-light btn-lg" style="margin-left: 1rem;">Return Home</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

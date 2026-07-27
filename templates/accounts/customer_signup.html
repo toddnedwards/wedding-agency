@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up - WeddingVendors{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="card" style="max-width: 500px; margin: 0 auto;">
+            <h2 class="text-center mb-4">Create Your Account</h2>
+            
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="form-error">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <button type="submit" class="btn btn-primary w-full btn-lg" style="margin-top: 1.5rem;">Sign Up</button>
+                
+                <p class="text-center mt-3">
+                    Already have an account? <a href="{% url 'accounts:customer_login' %}" class="text-primary">Login here</a>
+                </p>
+                
+                <p class="text-center mt-3" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                    Are you a vendor? <a href="{% url 'accounts:vendor_signup_choice' %}" class="text-primary">Register as vendor</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
