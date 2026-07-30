@@ -147,6 +147,12 @@
     flex-wrap: wrap;
 }
 
+.vendor-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
 .reviews-carousel {
     position: relative;
     overflow: hidden;
@@ -330,6 +336,11 @@
         padding: 0.65rem 1rem;
     }
 
+    .vendor-header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
     .mobile-video-title {
         display: none;
     }
@@ -480,7 +491,24 @@
                 <div class="card mb-4 vendor-details-card">
                     <div class="vendor-header">
                         <h2 style="margin: 0;">{{ vendor.public_name }}</h2>
-                        <a href="#enquiry-form-section" class="btn btn-primary">Enquire Now</a>
+                        <div class="vendor-header-actions">
+                            <button
+                                type="button"
+                                class="like-act-btn js-like-act-toggle"
+                                data-act-id="{{ vendor_type }}-{{ vendor.id }}"
+                                data-act-name="{{ vendor.public_name }}"
+                                data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}"
+                                data-act-type="{{ vendor_type|title }}"
+                                data-act-location="{{ vendor.location }}"
+                                data-act-image="{% if main_gallery_image %}{{ main_gallery_image.image.url }}{% elif vendor.profile_image %}{{ vendor.profile_image.url }}{% endif %}"
+                                aria-label="Like {{ vendor.public_name }}"
+                                aria-pressed="false"
+                                title="Like this act"
+                            >
+                                <span data-heart-icon aria-hidden="true">♡</span>
+                            </button>
+                            <a href="#enquiry-form-section" class="btn btn-primary">Enquire Now</a>
+                        </div>
                     </div>
                     
                     <div class="flex-between mb-3 desktop-only" style="margin-top: 1rem;">

@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, login
 from django.http import Http404
 from django.contrib import messages
 from django.db import transaction
+from django.db import IntegrityError
 from decimal import Decimal
 from .models import (
     Musician,
@@ -83,24 +84,29 @@ class VendorSignupView(CreateView):
     def form_valid(self, form):
         vendor_type = self.kwargs.get('vendor_type')
         password = form.cleaned_data.get('password')
-        
-        # Create user account
-        user = CustomUser.objects.create_user(
-            email=form.cleaned_data.get('email'),
-            username=form.cleaned_data.get('email'),
-            first_name=form.cleaned_data.get('first_name'),
-            last_name=form.cleaned_data.get('last_name'),
-            password=password,
-            user_type='vendor',
-            is_vendor=True,
-            phone=form.cleaned_data.get('phone'),
-        )
-        
-        # Create vendor profile
-        vendor = form.save(commit=False)
-        vendor.user = user
-        vendor.vendor_type = vendor_type
-        vendor.save()
+
+        try:
+            with transaction.atomic():
+                # Create user account
+                user = CustomUser.objects.create_user(
+                    email=form.cleaned_data.get('email'),
+                    username=form.cleaned_data.get('email'),
+                    first_name=form.cleaned_data.get('first_name'),
+                    last_name=form.cleaned_data.get('last_name'),
+                    password=password,
+                    user_type='vendor',
+                    is_vendor=True,
+                    phone=form.cleaned_data.get('phone'),
+                )
+
+                # Create vendor profile
+                vendor = form.save(commit=False)
+                vendor.user = user
+                vendor.vendor_type = vendor_type
+                vendor.save()
+        except IntegrityError:
+            form.add_error('email', 'An account with this email already exists. Please log in instead.')
+            return self.form_invalid(form)
         
         # Log user in
         user = authenticate(email=user.email, password=password)

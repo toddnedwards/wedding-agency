@@ -1,5 +1,6 @@
 from django import forms
 from apps.vendors.models import Musician, Caricaturist, Photographer
+from apps.accounts.models import CustomUser
 
 
 ACT_TYPE_CHOICES = [
@@ -165,6 +166,16 @@ class BaseVendorSignupForm(forms.ModelForm):
             raise forms.ValidationError('Passwords do not match.')
 
         return cleaned_data
+
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if not email:
+            return email
+
+        if not self.is_profile_edit and CustomUser.objects.filter(username__iexact=email).exists():
+            raise forms.ValidationError('An account with this email already exists. Please log in instead.')
+
+        return email
 
     def save(self, commit=True):
         vendor = super().save(commit=False)
@@ -389,10 +400,10 @@ class CaricaturistSignupForm(BaseVendorSignupForm):
 class PhotographerSignupForm(BaseVendorSignupForm):
     """Form for photographers to register as vendors"""
 
-    act_types = forms.ChoiceField(
+    act_types = forms.MultipleChoiceField(
         choices=PHOTOGRAPHER_SERVICE_CHOICES,
-        widget=forms.RadioSelect,
-        help_text='Select your primary photography service.',
+        widget=forms.CheckboxSelectMultiple,
+        help_text='Select all photography services you offer.',
     )
 
     class Meta:

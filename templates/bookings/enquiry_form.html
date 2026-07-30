@@ -7,10 +7,32 @@
     <div class="container">
         <div class="card" style="max-width: 760px; margin: 0 auto;">
             <h1 class="mb-1">Send an Enquiry</h1>
-            <p class="text-muted mb-4">Tell the vendor about your event and requirements.</p>
+            {% if is_multi_enquiry %}
+                <p class="text-muted mb-3">Tell us about your event and we will send your enquiry to all selected acts.</p>
+            {% else %}
+                <p class="text-muted mb-4">Tell the vendor about your event and requirements.</p>
+            {% endif %}
+
+            {% if selected_acts %}
+                <div class="card" style="background: #faf5ff; border-color: rgba(147, 51, 234, 0.28); margin-bottom: 1rem;">
+                    <h3 class="mb-2" style="font-size: 1.1rem;">Selected acts{% if selected_count %} ({{ selected_count }}){% endif %}</h3>
+                    <ul style="padding-left: 1.2rem; margin: 0;">
+                        {% for item in selected_acts %}
+                            <li style="margin-bottom: 0.4rem;">
+                                <strong>{{ item.name }}</strong>
+                                {% if item.type_label %}<span class="text-muted"> - {{ item.type_label }}</span>{% endif %}
+                                {% if item.location %}<span class="text-muted"> - {{ item.location }}</span>{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
 
             <form method="post">
                 {% csrf_token %}
+                {% if selected_acts_token %}
+                    <input type="hidden" name="selected_acts" value="{{ selected_acts_token }}">
+                {% endif %}
 
                 {% if form.non_field_errors %}
                     <div class="form-error mb-3">{{ form.non_field_errors }}</div>

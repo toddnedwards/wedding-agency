@@ -10,6 +10,7 @@ urlpatterns = [
     
     # Enquiries
     path('vendors/<str:vendor_type>/<int:vendor_id>/enquiry/', views.EnquiryCreateView.as_view(), name='create_enquiry'),
+    path('enquiry/multi/', views.MultiActEnquiryView.as_view(), name='multi_act_enquiry'),
     path('enquiry/confirmation/', views.enquiry_confirmation, name='enquiry_confirmation'),
     path('my-enquiries/', views.my_enquiries, name='my_enquiries'),
     path('enquiry/<int:pk>/', views.enquiry_detail, name='enquiry_detail'),

@@ -11,5 +11,17 @@
     <p><strong>Customer email:</strong> {{ customer_email }}</p>
     <p><strong>Event type:</strong> {{ event_type }}</p>
     <p><strong>Event date:</strong> {{ event_date }}</p>
+    {% if selected_acts %}
+        <h3>Acts chosen by customer</h3>
+        <ul>
+            {% for act in selected_acts %}
+                <li>
+                    <strong>{{ act.name }}</strong>
+                    {% if act.type_label %}- {{ act.type_label }}{% endif %}
+                    {% if act.location %} - {{ act.location }}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </body>
 </html>

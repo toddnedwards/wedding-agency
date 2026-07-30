@@ -7,10 +7,91 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.db.models import Count, Q
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 from urllib.parse import parse_qs, urlparse
 from .models import Enquiry, EnquiryNotification
 from .forms import EnquiryForm
 from apps.vendors.models import Musician, Caricaturist, Photographer
+
+
+VENDOR_MODEL_MAP = {
+    'musicians': Musician,
+    'caricaturists': Caricaturist,
+    'photographers': Photographer,
+}
+
+
+def _parse_multi_act_token(raw_token):
+    """Parse a token like 'musicians:2|photographers:4' into approved vendor records."""
+    token = (raw_token or '').strip()
+    if not token:
+        return []
+
+    requested = []
+    seen_keys = set()
+
+    for part in token.split('|'):
+        chunk = (part or '').strip()
+        if not chunk:
+            continue
+
+        if ':' in chunk:
+            vendor_type, vendor_id = chunk.split(':', 1)
+        elif '-' in chunk:
+            vendor_type, vendor_id = chunk.rsplit('-', 1)
+        else:
+            continue
+
+        vendor_type = vendor_type.strip()
+        vendor_id = vendor_id.strip()
+
+        if vendor_type not in VENDOR_MODEL_MAP or not vendor_id.isdigit():
+            continue
+
+        key = f"{vendor_type}:{vendor_id}"
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+
+        requested.append((vendor_type, int(vendor_id)))
+
+    if not requested:
+        return []
+
+    ids_by_type = {}
+    for vendor_type, vendor_id in requested:
+        ids_by_type.setdefault(vendor_type, []).append(vendor_id)
+
+    loaded_by_type = {}
+    for vendor_type, ids in ids_by_type.items():
+        model = VENDOR_MODEL_MAP[vendor_type]
+        loaded_by_type[vendor_type] = {
+            item.id: item
+            for item in model.objects.filter(id__in=ids, is_active=True, is_approved=True)
+        }
+
+    selected = []
+    for vendor_type, vendor_id in requested:
+        vendor_obj = loaded_by_type.get(vendor_type, {}).get(vendor_id)
+        if not vendor_obj:
+            continue
+        selected.append({
+            'vendor_type': vendor_type,
+            'vendor': vendor_obj,
+            'name': vendor_obj.public_name,
+            'location': vendor_obj.location,
+            'type_label': vendor_obj.get_vendor_type_display(),
+        })
+
+    return selected
+
+
+def _serialize_multi_act_token(selected_acts):
+    return '|'.join(
+        f"{item['vendor_type']}:{item['vendor'].id}"
+        for item in selected_acts
+    )
 
 
 class VendorListView(ListView):
@@ -174,8 +255,9 @@ class EnquiryCreateView(CreateView):
         
         return super().form_valid(form)
     
-    def _send_notifications(self, enquiry):
+    def _send_notifications(self, enquiry, selected_acts=None):
         """Send notifications to vendor and admin"""
+        selected_acts = selected_acts or []
         
         # Notify vendor
         vendor_email = enquiry.vendor.user.email
@@ -190,6 +272,7 @@ class EnquiryCreateView(CreateView):
             'event_location': enquiry.event_location,
             'details': enquiry.details,
             'special_requirements': enquiry.special_requirements,
+            'selected_acts': selected_acts,
         }
         
         vendor_subject = f"New Enquiry: {enquiry.customer_name} - {enquiry.event_date}"
@@ -220,6 +303,7 @@ class EnquiryCreateView(CreateView):
             'customer_email': enquiry.customer_email,
             'event_date': enquiry.event_date,
             'event_type': enquiry.event_type,
+            'selected_acts': selected_acts,
         }
         
         admin_subject = f"Enquiry Forwarded: {enquiry.customer_name} → {enquiry.vendor.business_name}"
@@ -248,6 +332,7 @@ class EnquiryCreateView(CreateView):
             'customer_name': enquiry.customer_name,
             'vendor_name': enquiry.vendor.business_name,
             'event_date': enquiry.event_date,
+            'selected_acts': selected_acts,
         }
         
         customer_subject = "Your Enquiry Has Been Received"
@@ -261,6 +346,73 @@ class EnquiryCreateView(CreateView):
             html_message=customer_message,
             fail_silently=True,
         )
+
+
+class MultiActEnquiryView(EnquiryCreateView):
+    """Submit one enquiry form for multiple selected acts."""
+    template_name = 'bookings/enquiry_form.html'
+
+    def get(self, request, *args, **kwargs):
+        selected_acts = _parse_multi_act_token(request.GET.get('acts', ''))
+        if len(selected_acts) < 2:
+            messages.warning(request, 'Please like at least two acts before using Enquire for all.')
+            return redirect('home')
+
+        context = {
+            'form': EnquiryForm(),
+            'selected_acts': selected_acts,
+            'selected_acts_token': _serialize_multi_act_token(selected_acts),
+            'is_multi_enquiry': True,
+            'selected_count': len(selected_acts),
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = EnquiryForm(request.POST)
+        selected_acts = _parse_multi_act_token(request.POST.get('selected_acts', ''))
+
+        if len(selected_acts) < 2:
+            form.add_error(None, 'Please choose at least two acts before sending a multi-enquiry.')
+
+        if not form.is_valid():
+            context = {
+                'form': form,
+                'selected_acts': selected_acts,
+                'selected_acts_token': _serialize_multi_act_token(selected_acts),
+                'is_multi_enquiry': True,
+                'selected_count': len(selected_acts),
+            }
+            return render(request, self.template_name, context)
+
+        cleaned = form.cleaned_data
+        selected_for_email = [
+            {
+                'name': item['name'],
+                'location': item['location'],
+                'type_label': item['type_label'],
+            }
+            for item in selected_acts
+        ]
+
+        for item in selected_acts:
+            enquiry = Enquiry.objects.create(
+                vendor=item['vendor'],
+                customer_name=cleaned['customer_name'],
+                customer_email=cleaned['customer_email'],
+                customer_phone=cleaned['customer_phone'],
+                customer_user=request.user if request.user.is_authenticated else None,
+                event_date=cleaned['event_date'],
+                event_time=cleaned['event_time'],
+                event_type=cleaned['event_type'],
+                event_location=cleaned['event_location'],
+                venue_name=cleaned.get('venue_name', ''),
+                county=cleaned.get('county', ''),
+                details=cleaned['details'],
+                special_requirements=cleaned.get('special_requirements', ''),
+            )
+            self._send_notifications(enquiry, selected_acts=selected_for_email)
+
+        return HttpResponseRedirect(self.success_url)
 
 
 def enquiry_confirmation(request):

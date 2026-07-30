@@ -23,6 +23,10 @@ class AboutView(TemplateView):
 class ServicesView(TemplateView):
     template_name = 'core/services.html'
 
+
+class VibeQuizView(TemplateView):
+    template_name = 'core/vibe_quiz.html'
+
 class ContactView(TemplateView):
     template_name = 'core/contact.html'
 

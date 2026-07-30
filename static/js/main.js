@@ -113,3 +113,314 @@ alerts.forEach(alert => {
         setTimeout(() => alert.remove(), 300);
     }, 5000);
 });
+
+// Clickable cards: make whole card open details while preserving nested controls.
+const clickableCards = document.querySelectorAll('.js-vendor-card-link');
+const interactiveSelector = 'a, button, input, select, textarea, label, [role="button"], [role="link"]';
+
+clickableCards.forEach((card) => {
+    const href = card.getAttribute('data-card-link');
+    if (!href) return;
+
+    card.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target instanceof Element && target.closest(interactiveSelector)) {
+            return;
+        }
+        window.location.href = href;
+    });
+
+    card.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        const target = event.target;
+        if (target instanceof Element && target !== card && target.closest(interactiveSelector)) {
+            return;
+        }
+
+        event.preventDefault();
+        window.location.href = href;
+    });
+});
+
+// Liked acts (client-side)
+const likedActsStorageKey = 'likedActs';
+
+function normalizeActId(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+
+    const colonMatch = raw.match(/^(musicians|caricaturists|photographers):(\d+)$/);
+    if (colonMatch) {
+        return `${colonMatch[1]}:${colonMatch[2]}`;
+    }
+
+    const dashMatch = raw.match(/^(musicians|caricaturists|photographers)-(\d+)$/);
+    if (dashMatch) {
+        return `${dashMatch[1]}:${dashMatch[2]}`;
+    }
+
+    return '';
+}
+
+function readLikedActs() {
+    try {
+        const raw = window.localStorage.getItem(likedActsStorageKey);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+
+        const cleaned = [];
+        const seen = new Set();
+
+        parsed.forEach((item) => {
+            if (!item || !item.name || !item.url) return;
+            const normalizedId = normalizeActId(item.id);
+            if (!normalizedId || seen.has(normalizedId)) return;
+            seen.add(normalizedId);
+
+            cleaned.push({
+                ...item,
+                id: normalizedId,
+            });
+        });
+
+        return cleaned;
+    } catch (error) {
+        return [];
+    }
+}
+
+function writeLikedActs(items) {
+    window.localStorage.setItem(likedActsStorageKey, JSON.stringify(items));
+}
+
+function findLikedIndex(items, id) {
+    return items.findIndex((item) => item.id === id);
+}
+
+function escapeHtml(text) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function buttonToAct(button) {
+    if (!button || !button.dataset) return null;
+    const act = {
+        id: normalizeActId(button.dataset.actId || ''),
+        name: (button.dataset.actName || '').trim(),
+        url: (button.dataset.actUrl || '').trim(),
+        type: (button.dataset.actType || '').trim(),
+        location: (button.dataset.actLocation || '').trim(),
+        image: (button.dataset.actImage || '').trim()
+    };
+
+    if (!act.id || !act.name || !act.url) return null;
+    return act;
+}
+
+function setLikeButtonVisualState(button, isLiked) {
+    const heart = button.querySelector('[data-heart-icon]');
+    button.classList.toggle('is-liked', isLiked);
+    button.setAttribute('aria-pressed', isLiked ? 'true' : 'false');
+    button.setAttribute('title', isLiked ? 'Remove from liked acts' : 'Like this act');
+    if (heart) {
+        heart.textContent = isLiked ? '♥' : '♡';
+    }
+}
+
+function updateLikedCount(count) {
+    const countEls = document.querySelectorAll('[data-liked-count]');
+    countEls.forEach((el) => {
+        el.textContent = String(count);
+    });
+}
+
+function updateAllLikeButtons() {
+    const likedActs = readLikedActs();
+    const likedIds = new Set(likedActs.map((item) => item.id));
+    const buttons = document.querySelectorAll('.js-like-act-toggle');
+
+    buttons.forEach((button) => {
+        const act = buttonToAct(button);
+        if (!act) return;
+        setLikeButtonVisualState(button, likedIds.has(act.id));
+    });
+}
+
+function renderLikedActsPanel() {
+    const panel = document.getElementById('liked-acts-panel');
+    if (!panel) return;
+
+    const listEl = panel.querySelector('[data-liked-list]');
+    const emptyEl = panel.querySelector('[data-liked-empty]');
+    const searchEl = panel.querySelector('[data-liked-search]');
+    if (!listEl || !emptyEl) return;
+
+    const searchTerm = (searchEl ? searchEl.value : '').trim().toLowerCase();
+    const likedActs = readLikedActs();
+    const existingCta = panel.querySelector('[data-liked-multi-enquiry]');
+    if (existingCta) {
+        existingCta.remove();
+    }
+
+    const filtered = likedActs.filter((item) => {
+        if (!searchTerm) return true;
+        const haystack = `${item.name} ${item.type || ''} ${item.location || ''}`.toLowerCase();
+        return haystack.includes(searchTerm);
+    });
+
+    if (!filtered.length) {
+        listEl.innerHTML = '';
+        emptyEl.hidden = false;
+        emptyEl.textContent = likedActs.length
+            ? 'No liked acts match your search.'
+            : 'No liked acts yet.';
+        return;
+    }
+
+    emptyEl.hidden = true;
+    listEl.innerHTML = filtered.map((item) => {
+        const metaParts = [item.type, item.location].filter(Boolean);
+        const meta = metaParts.join(' • ');
+        return `
+            <article class="liked-act-item">
+                <div>
+                    <p class="liked-act-name"><a href="${escapeHtml(item.url)}">${escapeHtml(item.name)}</a></p>
+                    <p class="liked-act-meta">${escapeHtml(meta || 'Saved act')}</p>
+                </div>
+                <button type="button" class="liked-act-remove" data-remove-liked-id="${escapeHtml(item.id)}">Remove</button>
+            </article>
+        `;
+    }).join('');
+
+    const validSelectedActs = likedActs
+        .filter((item) => normalizeActId(item.id))
+        .map((item) => ({ ...item, id: normalizeActId(item.id) }));
+
+    if (validSelectedActs.length > 1) {
+        const actsToken = validSelectedActs
+            .map((item) => `${item.id || ''}`.trim())
+            .filter(Boolean)
+            .join('|');
+        const baseMultiUrl = panel.getAttribute('data-multi-enquiry-url') || '/bookings/enquiry/multi/';
+        const separator = baseMultiUrl.includes('?') ? '&' : '?';
+        const multiUrl = `${baseMultiUrl}${separator}acts=${encodeURIComponent(actsToken)}`;
+
+        const cta = document.createElement('div');
+        cta.className = 'liked-multi-enquiry';
+        cta.setAttribute('data-liked-multi-enquiry', 'true');
+        cta.innerHTML = `
+            <p>Too many great people to choose from? Enquire for all of them now and we'll get back to you with all the best options!</p>
+            <a class="btn btn-primary" href="${multiUrl}">Enquire for all</a>
+        `;
+        panel.appendChild(cta);
+    }
+}
+
+function refreshLikedUi() {
+    const likedActs = readLikedActs();
+    updateLikedCount(likedActs.length);
+    updateAllLikeButtons();
+    renderLikedActsPanel();
+}
+
+function toggleActFromButton(button) {
+    const act = buttonToAct(button);
+    if (!act) return;
+
+    const likedActs = readLikedActs();
+    const existingIndex = findLikedIndex(likedActs, act.id);
+
+    if (existingIndex >= 0) {
+        likedActs.splice(existingIndex, 1);
+    } else {
+        likedActs.push(act);
+    }
+
+    writeLikedActs(likedActs);
+    refreshLikedUi();
+}
+
+const likeButtons = document.querySelectorAll('.js-like-act-toggle');
+likeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+        toggleActFromButton(button);
+    });
+});
+
+const likedPanel = document.getElementById('liked-acts-panel');
+const likedBackdrop = document.querySelector('[data-liked-backdrop]');
+const likedToggles = document.querySelectorAll('[data-liked-toggle]');
+const likedClose = document.querySelector('[data-liked-close]');
+const likedSearch = document.querySelector('[data-liked-search]');
+
+function setLikedPanelOpen(isOpen) {
+    if (!likedPanel) return;
+    likedPanel.classList.toggle('open', isOpen);
+    likedPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+    likedToggles.forEach((toggle) => {
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    if (likedBackdrop) {
+        likedBackdrop.hidden = !isOpen;
+    }
+
+    if (isOpen && likedSearch) {
+        likedSearch.focus();
+    }
+}
+
+likedToggles.forEach((toggle) => {
+    toggle.addEventListener('click', () => {
+        const openNow = likedPanel && likedPanel.classList.contains('open');
+        setLikedPanelOpen(!openNow);
+    });
+});
+
+if (likedClose) {
+    likedClose.addEventListener('click', () => setLikedPanelOpen(false));
+}
+
+if (likedBackdrop) {
+    likedBackdrop.addEventListener('click', () => setLikedPanelOpen(false));
+}
+
+if (likedSearch) {
+    likedSearch.addEventListener('input', () => {
+        renderLikedActsPanel();
+    });
+}
+
+if (likedPanel) {
+    likedPanel.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+
+        const removeButton = target.closest('[data-remove-liked-id]');
+        if (!removeButton) return;
+
+        const id = removeButton.getAttribute('data-remove-liked-id');
+        if (!id) return;
+
+        const likedActs = readLikedActs().filter((item) => item.id !== id);
+        writeLikedActs(likedActs);
+        refreshLikedUi();
+    });
+}
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && likedPanel && likedPanel.classList.contains('open')) {
+        setLikedPanelOpen(false);
+    }
+});
+
+refreshLikedUi();

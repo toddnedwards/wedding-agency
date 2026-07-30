@@ -7,6 +7,18 @@
 <body>
     <h2>Thanks {{ customer_name }}, your enquiry has been received</h2>
     <p>We have sent your enquiry to {{ vendor_name }}.</p>
+    {% if selected_acts %}
+        <p><strong>Selected acts:</strong></p>
+        <ul>
+            {% for act in selected_acts %}
+                <li>
+                    <strong>{{ act.name }}</strong>
+                    {% if act.type_label %}- {{ act.type_label }}{% endif %}
+                    {% if act.location %} - {{ act.location }}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <p>Event date: {{ event_date }}</p>
     <p>You should hear back from the vendor soon.</p>
 </body>

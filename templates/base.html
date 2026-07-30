@@ -13,12 +13,12 @@
     <nav>
         <div class="container">
             <div class="navbar">
-                <a href="{% url 'home' %}" class="nav-brand" aria-label="Clink Entertainment home">
-                    <img src="{% static 'images/logo.webp' %}" alt="Clink Entertainment logo" class="nav-logo">
-                    <span>Clink Entertainment</span>
+                <a href="{% url 'home' %}" class="nav-brand" aria-label="The Best Entertainment home">
+                    <img src="{% static 'images/logo.webp' %}" alt="The Best Entertainment logo" class="nav-logo">
                 </a>
                 <div class="nav-menu">
                     <a href="{% url 'home' %}">Home</a>
+                    <a href="{% url 'vibe_quiz' %}">Vibe Finder Quiz</a>
                     <div class="mega-menu-wrapper">
                         <button class="mega-toggle" type="button" aria-expanded="false" aria-controls="musicians-mega-menu">
                             Musicians
@@ -43,7 +43,7 @@
                                     <span>Ceremony and cocktail hour vibes</span>
                                 </a>
                                 <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}?style=pianist" class="mega-item" role="menuitem">
-                                    <strong>Pianist</strong>
+                                    <strong>Pianists</strong>
                                     <span>Elegant piano-led performances</span>
                                 </a>
                             </div>
@@ -51,6 +51,11 @@
                     </div>
                     <a href="{% url 'bookings:vendor_list' vendor_type='caricaturists' %}">Caricaturists</a>
                     <a href="{% url 'bookings:vendor_list' vendor_type='photographers' %}">Photographers</a>
+                    <button type="button" class="liked-nav-btn" data-liked-toggle aria-expanded="false" aria-controls="liked-acts-panel">
+                        <span class="liked-nav-heart" aria-hidden="true">♡</span>
+                        Liked
+                        <span class="liked-count-badge" data-liked-count>0</span>
+                    </button>
                     
                     {% if user.is_authenticated %}
                         <a href="#">Hi, {{ user.first_name }}</a>
@@ -72,6 +77,21 @@
             </div>
         </div>
     </nav>
+
+    <aside id="liked-acts-panel" class="liked-panel" aria-hidden="true" aria-label="Liked acts" data-multi-enquiry-url="{% url 'bookings:multi_act_enquiry' %}">
+        <div class="liked-panel-header">
+            <h3>Liked Acts</h3>
+            <button type="button" class="liked-panel-close" data-liked-close aria-label="Close liked acts">x</button>
+        </div>
+        <p class="text-muted small">Save acts with the heart icon, then search and revisit them here.</p>
+        <div class="form-group" style="margin-top: 1rem; margin-bottom: 0.75rem;">
+            <label for="liked-acts-search" class="small">Search liked acts</label>
+            <input id="liked-acts-search" type="text" placeholder="Search by name, type, or location" data-liked-search>
+        </div>
+        <div class="liked-acts-list" data-liked-list></div>
+        <p class="text-muted small" data-liked-empty>No liked acts yet.</p>
+    </aside>
+    <div class="liked-panel-backdrop" data-liked-backdrop hidden></div>
 
     <!-- Messages -->
     {% if messages %}
@@ -95,7 +115,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>About Us</h4>
-                    <p>Clink Entertainment connects you with the best wedding professionals in your area. Find musicians, photographers, caricaturists and more.</p>
+                    <p>The Best Entertainment connects you with the best wedding professionals in your area. Find musicians, photographers, caricaturists and more.</p>
                 </div>
                 <div class="footer-section">
                     <h4>For Customers</h4>
@@ -124,10 +144,10 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <a href="{% url 'home' %}" class="footer-brand" aria-label="Clink Entertainment home">
-                    <img src="{% static 'images/logo.webp' %}" alt="Clink Entertainment logo" class="footer-logo">
+                <a href="{% url 'home' %}" class="footer-brand" aria-label="The Best Entertainment home">
+                    <img src="{% static 'images/logo.webp' %}" alt="The Best Entertainment logo" class="footer-logo">
                 </a>
-                <p>&copy; 2024 Clink Entertainment. All rights reserved.</p>
+                <p>&copy; 2024 The Best Entertainment. All rights reserved.</p>
             </div>
         </div>
     </footer>

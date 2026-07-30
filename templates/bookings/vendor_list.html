@@ -10,6 +10,15 @@
     align-items: flex-start;
 }
 
+.vendor-card.clickable-card {
+    cursor: pointer;
+}
+
+.vendor-card.clickable-card:focus-visible {
+    outline: 3px solid rgba(147, 51, 234, 0.35);
+    outline-offset: 2px;
+}
+
 .vendor-card-image {
     flex: 0 0 220px;
     width: 220px;
@@ -35,6 +44,17 @@
     flex: 1;
     min-width: 0;
     padding-top: 0.2rem;
+}
+
+.vendor-card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.vendor-card-title-row h3 {
+    margin: 0;
 }
 
 .vendor-rating {
@@ -77,6 +97,7 @@
     .vendor-bio {
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
@@ -119,7 +140,13 @@
         {% if vendors %}
             <div class="grid grid-3">
                 {% for vendor in vendors %}
-                    <div class="card vendor-card">
+                    <div
+                        class="card vendor-card clickable-card js-vendor-card-link"
+                        data-card-link="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}"
+                        role="link"
+                        tabindex="0"
+                        aria-label="View {{ vendor.public_name }}"
+                    >
                         <div class="vendor-card-image">
                             {% if vendor.profile_image %}
                                 <img src="{{ vendor.profile_image.url }}" alt="{{ vendor.business_name }}">
@@ -129,12 +156,29 @@
                         </div>
 
                         <div class="vendor-card-body">
-                            <h3>{{ vendor.public_name }}</h3>
+                            <div class="vendor-card-title-row">
+                                <h3>{{ vendor.public_name }}</h3>
+                                <button
+                                    type="button"
+                                    class="like-act-btn js-like-act-toggle"
+                                    data-act-id="{{ vendor_type }}-{{ vendor.id }}"
+                                    data-act-name="{{ vendor.public_name }}"
+                                    data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}"
+                                    data-act-type="{{ vendor_type|title }}"
+                                    data-act-location="{{ vendor.location }}"
+                                    data-act-image="{% if vendor.profile_image %}{{ vendor.profile_image.url }}{% endif %}"
+                                    aria-label="Like {{ vendor.public_name }}"
+                                    aria-pressed="false"
+                                    title="Like this act"
+                                >
+                                    <span data-heart-icon aria-hidden="true">♡</span>
+                                </button>
+                            </div>
                             <p class="vendor-rating" aria-label="5 out of 5 stars">★★★★★</p>
                             <p class="vendor-bio">{{ vendor.bio|default:'No description available yet.'|truncatewords:35 }}</p>
 
                             <div style="margin-top: 1.2rem;">
-                                <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}" class="btn btn-primary w-full">Enquire</a>
+                                <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}" class="btn btn-primary w-full">Find Out More</a>
                             </div>
                         </div>
                     </div>
