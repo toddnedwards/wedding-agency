@@ -16,6 +16,43 @@ navLinks.forEach(link => {
     });
 });
 
+// Mega menu toggle for touch/mobile interactions
+const megaWrappers = document.querySelectorAll('.mega-menu-wrapper');
+megaWrappers.forEach(wrapper => {
+    const toggle = wrapper.querySelector('.mega-toggle');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isOpen = wrapper.classList.contains('open');
+
+        megaWrappers.forEach(item => {
+            item.classList.remove('open');
+            const itemToggle = item.querySelector('.mega-toggle');
+            if (itemToggle) {
+                itemToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        if (!isOpen) {
+            wrapper.classList.add('open');
+            toggle.setAttribute('aria-expanded', 'true');
+        }
+    });
+});
+
+document.addEventListener('click', (e) => {
+    megaWrappers.forEach(wrapper => {
+        if (!wrapper.contains(e.target)) {
+            wrapper.classList.remove('open');
+            const toggle = wrapper.querySelector('.mega-toggle');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        }
+    });
+});
+
 // Form validation
 const forms = document.querySelectorAll('form');
 forms.forEach(form => {

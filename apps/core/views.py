@@ -8,7 +8,7 @@ from .models import BlogPost, ContactMessage
 from apps.vendors.models import Musician, Caricaturist, Photographer
 
 class HomeView(TemplateView):
-    template_name = 'core/home.html'
+    template_name = 'home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -1,64 +1,603 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ vendor.business_name }} - WeddingVendors{% endblock %}
+{% block title %}{{ vendor.public_name }} - WeddingVendors{% endblock %}
+
+{% block extra_css %}
+<style>
+.vendor-gallery-main {
+    width: 100%;
+    min-height: 320px;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    margin-bottom: 0.8rem;
+    cursor: zoom-in;
+}
+
+.vendor-gallery-main img {
+    max-width: 100%;
+    max-height: 520px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 0.5rem;
+}
+
+.vendor-gallery-thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+}
+
+.vendor-thumb {
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    background: #fff;
+    overflow: hidden;
+    padding: 0;
+    cursor: pointer;
+}
+
+.vendor-thumb.active {
+    border-color: var(--primary-color);
+}
+
+.vendor-thumb img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+}
+
+.vendor-videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.vendor-video-frame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--border-color);
+    border-radius: 0.6rem;
+    overflow: hidden;
+    background: #000;
+}
+
+.vendor-video-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.25rem;
+}
+
+.lightbox-overlay.open {
+    display: flex;
+}
+
+.lightbox-content {
+    width: min(1100px, 100%);
+    display: grid;
+    grid-template-columns: 60px 1fr 60px;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.lightbox-frame {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-frame img {
+    max-width: 100%;
+    max-height: 82vh;
+    object-fit: contain;
+    border-radius: 0.6rem;
+}
+
+.lightbox-btn,
+.lightbox-close {
+    border: 0;
+    border-radius: 999px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.15rem;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: block;
+}
+
+.vendor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.reviews-carousel {
+    position: relative;
+    overflow: hidden;
+}
+
+.review-slide {
+    display: none;
+}
+
+.review-slide.active {
+    display: block;
+}
+
+.review-stars {
+    color: #f59e0b;
+    font-size: 1rem;
+    margin-bottom: 0.45rem;
+}
+
+.reviews-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.9rem;
+}
+
+.reviews-btn {
+    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+}
+
+.review-dots {
+    display: flex;
+    gap: 0.45rem;
+}
+
+.review-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #d1d5db;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.review-dot.active {
+    background: var(--primary-color);
+}
+
+.price-highlight {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    padding: 0.45rem 0.75rem;
+}
+
+.mobile-price-box {
+    text-align: center;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.65rem;
+    background: #f9fafb;
+    margin-top: 0.75rem;
+}
+
+.mobile-price-box .badge {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 0.55rem 0.9rem;
+}
+
+.mobile-experience {
+    text-align: left;
+    margin-bottom: 0.6rem;
+}
+
+.mobile-video-title {
+    display: none;
+}
+
+.mobile-video-block {
+    margin-top: 1rem;
+}
+
+.mobile-photo-strip {
+    display: none;
+}
+
+.mobile-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.mobile-photo-thumb {
+    position: relative;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: #fff;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.mobile-photo-thumb img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+}
+
+.mobile-photo-more {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+@media (max-width: 760px) {
+    .container {
+        padding-left: 0.9rem;
+        padding-right: 0.9rem;
+    }
+
+    .vendor-detail-layout {
+        gap: 0.9rem !important;
+    }
+
+    .vendor-detail-layout .card {
+        padding: 1rem;
+        border-radius: 0.65rem;
+    }
+
+    .vendor-detail-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem !important;
+    }
+
+    .vendor-detail-right {
+        order: 1;
+    }
+
+    .vendor-detail-left {
+        display: none;
+    }
+
+    .mobile-only {
+        display: block;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
+    .vendor-header {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 0.7rem;
+    }
+
+    .vendor-header h2 {
+        font-size: 1.7rem;
+        line-height: 1.2;
+    }
+
+    .vendor-header .btn {
+        margin: 0 auto;
+        min-width: 190px;
+        padding: 0.65rem 1rem;
+    }
+
+    .mobile-video-title {
+        display: none;
+    }
+
+    .mobile-photo-strip {
+        display: block;
+        margin-top: 0.85rem;
+    }
+
+    .vendor-gallery-main {
+        min-height: 230px;
+        padding: 0.55rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .vendor-gallery-thumbs {
+        grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+        gap: 0.45rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .vendor-videos {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+
+    .vendor-video-frame {
+        border-radius: 0.5rem;
+    }
+
+    .vendor-details-card p,
+    .vendor-details-card .mb-2 {
+        font-size: 0.96rem;
+        line-height: 1.5;
+    }
+
+    .vendor-details-card .mb-2 {
+        margin-bottom: 0.8rem;
+    }
+
+    .vendor-details-card h4,
+    .vendor-reviews-card h3,
+    .vendor-enquiry-card h3 {
+        font-size: 1.05rem;
+        line-height: 1.3;
+    }
+
+    .vendor-about-title {
+        text-align: center;
+        font-size: 1.2rem;
+        line-height: 1.3;
+        margin-bottom: 0.65rem;
+    }
+
+    .vendor-about-block p {
+        margin-bottom: 0.7rem;
+    }
+
+    .mobile-price-box {
+        margin-top: 0.9rem;
+        margin-bottom: 0.2rem;
+        padding: 0.7rem;
+    }
+
+    .mobile-price-box .badge {
+        font-size: 1.03rem;
+        padding: 0.5rem 0.85rem;
+    }
+
+    .reviews-nav {
+        margin-top: 0.7rem;
+    }
+
+    .vendor-enquiry-card .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .lightbox-content {
+        grid-template-columns: 1fr;
+    }
+
+    .lightbox-btn {
+        display: none;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <section>
     <div class="container">
-        <div class="grid grid-2" style="gap: 3rem;">
+        <div class="grid grid-2 vendor-detail-layout" style="gap: 3rem;">
             <!-- Vendor Info -->
-            <div>
-                {% if vendor.profile_image %}
-                    <img src="{{ vendor.profile_image.url }}" alt="{{ vendor.business_name }}" style="width: 100%; border-radius: 0.75rem; margin-bottom: 1rem;">
+            <div class="vendor-detail-left">
+                {% if gallery_images %}
+                    <div id="vendorMainImageBox" class="vendor-gallery-main" role="button" tabindex="0" aria-label="Open image gallery">
+                        <img id="vendorMainImage" src="{{ main_gallery_image.image.url }}" alt="{{ vendor.public_name }} main image">
+                    </div>
+
+                    <div class="vendor-gallery-thumbs">
+                        {% for image in gallery_images %}
+                            <button
+                                type="button"
+                                class="vendor-thumb {% if image.id == main_gallery_image.id %}active{% endif %}"
+                                data-index="{{ forloop.counter0 }}"
+                                data-image-url="{{ image.image.url }}"
+                                aria-label="View image {{ forloop.counter }}"
+                            >
+                                <img src="{{ image.image.url }}" alt="{{ vendor.public_name }} image {{ forloop.counter }}">
+                            </button>
+                        {% endfor %}
+                    </div>
+                {% elif vendor.profile_image %}
+                    <div id="vendorMainImageBox" class="vendor-gallery-main" role="button" tabindex="0" aria-label="Open image gallery">
+                        <img id="vendorMainImage" src="{{ vendor.profile_image.url }}" alt="{{ vendor.public_name }} main image">
+                    </div>
                 {% else %}
                     <div style="width: 100%; height: 400px; background-color: var(--light-bg); border-radius: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; font-size: 5rem;">
                         🎭
                     </div>
                 {% endif %}
-                
-                <div class="card">
-                    <h3>About</h3>
-                    <p>{{ vendor.bio }}</p>
-                    
-                    <div class="mt-3">
-                        <p><strong>📍 Location:</strong> {{ vendor.location }}</p>
-                        <p><strong>📞 Phone:</strong> {{ vendor.phone }}</p>
-                        {% if vendor.website %}
-                            <p><strong>🌐 Website:</strong> <a href="{{ vendor.website }}" target="_blank">{{ vendor.website }}</a></p>
-                        {% endif %}
-                        {% if vendor.instagram %}
-                            <p><strong>📱 Instagram:</strong> <a href="https://instagram.com/{{ vendor.instagram }}" target="_blank">@{{ vendor.instagram }}</a></p>
-                        {% endif %}
-                        {% if vendor.facebook %}
-                            <p><strong>f Facebook:</strong> <a href="{{ vendor.facebook }}" target="_blank">View Page</a></p>
-                        {% endif %}
+
+                {% if gallery_video_embeds %}
+                    <div class="card mb-3 desktop-only">
+                        <h3 class="mb-2">Videos</h3>
+                        <div class="vendor-videos">
+                            {% for item in gallery_video_embeds %}
+                                {% if item.embed_url %}
+                                    <div class="vendor-video-frame">
+                                        <iframe
+                                            src="{{ item.embed_url }}"
+                                            title="{{ vendor.public_name }} video {{ forloop.counter }}"
+                                            loading="lazy"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            referrerpolicy="strict-origin-when-cross-origin"
+                                            allowfullscreen
+                                        ></iframe>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
-                </div>
+                {% endif %}
             </div>
             
             <!-- Details & Enquiry -->
-            <div>
-                <div class="card mb-4">
-                    <h2>{{ vendor.business_name }}</h2>
+            <div class="vendor-detail-right">
+                <div class="card mb-4 vendor-details-card">
+                    <div class="vendor-header">
+                        <h2 style="margin: 0;">{{ vendor.public_name }}</h2>
+                        <a href="#enquiry-form-section" class="btn btn-primary">Enquire Now</a>
+                    </div>
                     
-                    <div class="flex-between mb-3" style="margin-top: 1rem;">
-                        <span><strong>Experience:</strong> {{ vendor.experience_years }} years</span>
-                        <span class="badge badge-primary">£{{ vendor.hourly_rate }}/hour</span>
+                    <div class="flex-between mb-3 desktop-only" style="margin-top: 1rem;">
+                        <span></span>
+                        <span class="badge badge-primary price-highlight">From £{{ vendor.hourly_rate }}</span>
+                    </div>
+
+                    {% if gallery_video_embeds %}
+                        <div class="mobile-only mb-3 mobile-video-block">
+                            <h4 class="mb-2 mobile-video-title">Videos</h4>
+                            <div class="vendor-videos">
+                                {% for item in gallery_video_embeds %}
+                                    {% if item.embed_url %}
+                                        <div class="vendor-video-frame">
+                                            <iframe
+                                                src="{{ item.embed_url }}"
+                                                title="{{ vendor.public_name }} video {{ forloop.counter }}"
+                                                loading="lazy"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                referrerpolicy="strict-origin-when-cross-origin"
+                                                allowfullscreen
+                                            ></iframe>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            {% if gallery_images %}
+                                <div class="mobile-photo-strip">
+                                    <div class="mobile-photo-grid">
+                                        {% for image in gallery_images|slice:":3" %}
+                                            <button type="button" class="mobile-photo-thumb" data-mobile-index="{{ forloop.counter0 }}" aria-label="Open photo {{ forloop.counter }}">
+                                                <img src="{{ image.image.url }}" alt="{{ vendor.public_name }} photo {{ forloop.counter }}">
+                                                {% if forloop.counter == 3 and gallery_images|length > 3 %}
+                                                    <span class="mobile-photo-more">+{{ gallery_images|length|add:"-3" }} more</span>
+                                                {% endif %}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% elif vendor.profile_image %}
+                                <div class="mobile-photo-strip">
+                                    <div class="mobile-photo-grid">
+                                        <button type="button" class="mobile-photo-thumb" data-mobile-index="0" aria-label="Open photo">
+                                            <img src="{{ vendor.profile_image.url }}" alt="{{ vendor.public_name }} photo">
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="mobile-price-box">
+                                <span class="badge badge-primary">From £{{ vendor.hourly_rate }}</span>
+                            </div>
+                        </div>
+                    {% else %}
+                        {% if gallery_images %}
+                            <div class="mobile-only mobile-photo-strip mb-3">
+                                <div class="mobile-photo-grid">
+                                    {% for image in gallery_images|slice:":3" %}
+                                        <button type="button" class="mobile-photo-thumb" data-mobile-index="{{ forloop.counter0 }}" aria-label="Open photo {{ forloop.counter }}">
+                                            <img src="{{ image.image.url }}" alt="{{ vendor.public_name }} photo {{ forloop.counter }}">
+                                            {% if forloop.counter == 3 and gallery_images|length > 3 %}
+                                                <span class="mobile-photo-more">+{{ gallery_images|length|add:"-3" }} more</span>
+                                            {% endif %}
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% elif vendor.profile_image %}
+                            <div class="mobile-only mobile-photo-strip mb-3">
+                                <div class="mobile-photo-grid">
+                                    <button type="button" class="mobile-photo-thumb" data-mobile-index="0" aria-label="Open photo">
+                                        <img src="{{ vendor.profile_image.url }}" alt="{{ vendor.business_name }} photo">
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="mobile-only mobile-price-box mb-3">
+                            <span class="badge badge-primary">From £{{ vendor.hourly_rate }}</span>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3 mb-3 vendor-about-block">
+                        <h3 class="vendor-about-title">About</h3>
+                        <p>{{ vendor.bio }}</p>
+                        <p><strong>📍 Location:</strong> {{ vendor.location }}</p>
                     </div>
                     
                     {% if vendor_type == 'musicians' %}
                         <div class="mb-2">
-                            <strong>🎸 Instruments:</strong> {{ vendor.instruments }}
-                        </div>
-                        <div class="mb-2">
                             <strong>🎵 Genres:</strong> {{ vendor.genres }}
                         </div>
                         <div class="mb-2">
-                            <strong>👥 Ensemble Size:</strong> {{ vendor.ensemble_size }}
+                            <strong>🔊 Sound System:</strong>
+                            {% if vendor.can_provide_sound_system %}
+                                <span style="color: #16a34a; font-weight: 700;">✓</span>
+                            {% else %}
+                                No
+                            {% endif %}
                         </div>
-                        <div class="mb-2">
-                            <strong>🔊 Sound System:</strong> {% if vendor.can_provide_sound_system %}Yes{% else %}No{% endif %}
-                        </div>
+                        {% if vendor.can_provide_sound_system and vendor.sound_system_details %}
+                            <div class="mb-2">
+                                <strong>🔈 Sound Setup:</strong> {{ vendor.sound_system_details }}
+                            </div>
+                        {% endif %}
+                        {% if vendor.can_provide_lighting_system %}
+                            <div class="mb-2">
+                                <strong>💡 Lighting System:</strong>
+                                <span style="color: #16a34a; font-weight: 700;">✓</span>
+                            </div>
+                            {% if vendor.lighting_system_details %}
+                                <div class="mb-2">
+                                    <strong>💡 Lighting Setup:</strong> {{ vendor.lighting_system_details }}
+                                </div>
+                            {% endif %}
+                        {% endif %}
                     {% elif vendor_type == 'photographers' %}
                         <div class="mb-2">
                             <strong>📸 Specialization:</strong> {{ vendor.specialization }}
@@ -66,7 +605,7 @@
                         <div class="mb-2">
                             <strong>✨ Editing Style:</strong> {{ vendor.editing_style }}
                         </div>
-                        <div class="mb-2"}
+                        <div class="mb-2">
                             <strong>👥 Second Shooter:</strong> {% if vendor.has_second_shooter %}Yes{% else %}No{% endif %}
                         </div>
                         <div class="mb-2">
@@ -90,9 +629,40 @@
                         </div>
                     {% endif %}
                 </div>
+
+                {% if reviews %}
+                    <div class="card mb-4 reviews-carousel vendor-reviews-card" id="reviewsCarousel">
+                        <h3 class="mb-2">Reviews</h3>
+
+                        {% for review in reviews %}
+                            <div class="review-slide {% if forloop.first %}active{% endif %}">
+                                <div class="review-stars">
+                                    {% for _ in '12345' %}
+                                        {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                    {% endfor %}
+                                </div>
+                                <p><strong>{{ review.title }}</strong></p>
+                                <p class="text-muted">{{ review.comment }}</p>
+                                <p class="text-muted small">{{ review.customer.first_name|default:review.customer.email }} • {{ review.created_at|date:"d M Y" }}</p>
+                            </div>
+                        {% endfor %}
+
+                        {% if reviews|length > 1 %}
+                            <div class="reviews-nav">
+                                <button type="button" class="reviews-btn" id="reviewsPrev" aria-label="Previous review">‹</button>
+                                <div class="review-dots" id="reviewsDots">
+                                    {% for review in reviews %}
+                                        <button type="button" class="review-dot {% if forloop.first %}active{% endif %}" data-review-index="{{ forloop.counter0 }}" aria-label="Go to review {{ forloop.counter }}"></button>
+                                    {% endfor %}
+                                </div>
+                                <button type="button" class="reviews-btn" id="reviewsNext" aria-label="Next review">›</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
                 
                 <!-- Enquiry Form -->
-                <div class="card">
+                <div class="card vendor-enquiry-card" id="enquiry-form-section">
                     <h3>Send an Enquiry</h3>
                     
                     <form method="post" action="{% url 'bookings:create_enquiry' vendor_type=vendor_type vendor_id=vendor.id %}" class="mt-3">
@@ -115,4 +685,140 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const thumbButtons = Array.from(document.querySelectorAll('.vendor-thumb'));
+    const mobilePhotoButtons = Array.from(document.querySelectorAll('.mobile-photo-thumb'));
+    const mainImage = document.getElementById('vendorMainImage');
+    const mainImageBox = document.getElementById('vendorMainImageBox');
+
+    const fallbackMain = mainImage ? mainImage.getAttribute('src') : '';
+    const imageUrls = thumbButtons.length
+        ? thumbButtons.map((btn) => btn.dataset.imageUrl)
+        : (fallbackMain ? [fallbackMain] : []);
+
+    let currentIndex = 0;
+    if (thumbButtons.length) {
+        const activeIdx = thumbButtons.findIndex((btn) => btn.classList.contains('active'));
+        currentIndex = activeIdx >= 0 ? activeIdx : 0;
+    }
+
+    function setActiveThumb(index) {
+        thumbButtons.forEach((btn, i) => btn.classList.toggle('active', i === index));
+    }
+
+    function setMainImage(index) {
+        if (!mainImage || !imageUrls.length) return;
+        currentIndex = (index + imageUrls.length) % imageUrls.length;
+        mainImage.src = imageUrls[currentIndex];
+        setActiveThumb(currentIndex);
+    }
+
+    thumbButtons.forEach((btn, idx) => {
+        btn.addEventListener('click', () => setMainImage(idx));
+    });
+
+    const lightbox = document.createElement('div');
+    lightbox.className = 'lightbox-overlay';
+    lightbox.innerHTML = `
+        <button type="button" class="lightbox-close" aria-label="Close gallery">x</button>
+        <div class="lightbox-content">
+            <button type="button" class="lightbox-btn" data-dir="prev" aria-label="Previous image"><</button>
+            <div class="lightbox-frame"><img alt="Expanded vendor image"></div>
+            <button type="button" class="lightbox-btn" data-dir="next" aria-label="Next image">></button>
+        </div>
+    `;
+    document.body.appendChild(lightbox);
+
+    const lightboxImg = lightbox.querySelector('.lightbox-frame img');
+    const closeBtn = lightbox.querySelector('.lightbox-close');
+    const navBtns = Array.from(lightbox.querySelectorAll('.lightbox-btn'));
+
+    function renderLightbox(index) {
+        if (!imageUrls.length) return;
+        currentIndex = (index + imageUrls.length) % imageUrls.length;
+        lightboxImg.src = imageUrls[currentIndex];
+    }
+
+    function openLightbox(index) {
+        if (!imageUrls.length) return;
+        renderLightbox(index);
+        lightbox.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    if (mainImageBox) {
+        mainImageBox.addEventListener('click', () => openLightbox(currentIndex));
+        mainImageBox.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openLightbox(currentIndex);
+            }
+        });
+    }
+
+    mobilePhotoButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.mobileIndex || 0);
+            openLightbox(Number.isNaN(idx) ? 0 : idx);
+        });
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (event) => {
+        if (event.target === lightbox) closeLightbox();
+    });
+
+    navBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const dir = btn.dataset.dir === 'next' ? 1 : -1;
+            renderLightbox(currentIndex + dir);
+        });
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (!lightbox.classList.contains('open')) return;
+        if (event.key === 'Escape') closeLightbox();
+        if (event.key === 'ArrowRight') renderLightbox(currentIndex + 1);
+        if (event.key === 'ArrowLeft') renderLightbox(currentIndex - 1);
+    });
+
+    if (imageUrls.length && mainImage) {
+        setMainImage(currentIndex);
+    }
+
+    const reviewSlides = Array.from(document.querySelectorAll('#reviewsCarousel .review-slide'));
+    const reviewDots = Array.from(document.querySelectorAll('#reviewsDots .review-dot'));
+    const prevReviewBtn = document.getElementById('reviewsPrev');
+    const nextReviewBtn = document.getElementById('reviewsNext');
+
+    if (reviewSlides.length > 1) {
+        let reviewIndex = 0;
+
+        const renderReview = (index) => {
+            reviewIndex = (index + reviewSlides.length) % reviewSlides.length;
+            reviewSlides.forEach((slide, i) => slide.classList.toggle('active', i === reviewIndex));
+            reviewDots.forEach((dot, i) => dot.classList.toggle('active', i === reviewIndex));
+        };
+
+        if (prevReviewBtn) {
+            prevReviewBtn.addEventListener('click', () => renderReview(reviewIndex - 1));
+        }
+        if (nextReviewBtn) {
+            nextReviewBtn.addEventListener('click', () => renderReview(reviewIndex + 1));
+        }
+        reviewDots.forEach((dot, idx) => {
+            dot.addEventListener('click', () => renderReview(idx));
+        });
+    }
+})();
+</script>
 {% endblock %}

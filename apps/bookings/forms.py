@@ -1,8 +1,20 @@
 from django import forms
+from django.utils import timezone
 from .models import Enquiry
 
 class EnquiryForm(forms.ModelForm):
     """Form for customer to submit an enquiry"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'event_date' in self.fields:
+            self.fields['event_date'].widget.attrs['min'] = timezone.localdate().isoformat()
+
+    def clean_event_date(self):
+        event_date = self.cleaned_data.get('event_date')
+        if event_date and event_date < timezone.localdate():
+            raise forms.ValidationError('Event date cannot be in the past.')
+        return event_date
     
     class Meta:
         model = Enquiry

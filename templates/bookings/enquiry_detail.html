@@ -37,7 +37,7 @@
             <!-- Vendor & Status -->
             <div>
                 <div class="card mb-4">
-                    <h3>{{ enquiry.vendor.business_name }}</h3>
+                    <h3>{{ enquiry.vendor.public_name }}</h3>
                     
                     <div class="mt-3">
                         <h4>Status</h4>
@@ -47,25 +47,6 @@
                             <p><strong>Note:</strong> {{ enquiry.vendor_availability_note }}</p>
                         {% endif %}
                     </div>
-                    
-                    <div class="mt-3">
-                        <h4>Vendor Info</h4>
-                        <p><strong>Phone:</strong> {{ enquiry.vendor.phone }}</p>
-                        <p><strong>Email:</strong> {{ enquiry.vendor.user.email }}</p>
-                        {% if enquiry.vendor.website %}
-                            <p><strong>Website:</strong> <a href="{{ enquiry.vendor.website }}" target="_blank">{{ enquiry.vendor.website }}</a></p>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <h4>Timeline</h4>
-                    <p><strong>Submitted:</strong> {{ enquiry.created_at|date:"d/m/Y H:i" }}</p>
-                    {% if enquiry.vendor_viewed %}
-                        <p><strong>Viewed by Vendor:</strong> {{ enquiry.vendor_viewed_date|date:"d/m/Y H:i" }}</p>
-                    {% else %}
-                        <p class="text-muted">Not viewed yet</p>
-                    {% endif %}
                 </div>
             </div>
         </div>

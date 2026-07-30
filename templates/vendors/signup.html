@@ -15,7 +15,14 @@
                 {% for field in form %}
                     <div class="form-group">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
+                        {% if field.name == 'start_price' %}
+                            <div class="currency-input">
+                                <span class="currency-prefix" aria-hidden="true">£</span>
+                                {{ field }}
+                            </div>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
                         {% if field.errors %}
                             <div class="form-error">{{ field.errors }}</div>
                         {% endif %}
@@ -25,7 +32,7 @@
                 <button type="submit" class="btn btn-primary w-full btn-lg" style="margin-top: 1.5rem;">Register as Vendor</button>
                 
                 <p class="text-center mt-3" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                    Already have an account? <a href="{% url 'accounts:customer_login' %}" class="text-primary">Login here</a>
+                    Already a vendor? <a href="{% url 'accounts:vendor_login' %}" class="text-primary">Login here</a>
                 </p>
             </form>
         </div>

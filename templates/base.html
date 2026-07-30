@@ -13,10 +13,42 @@
     <nav>
         <div class="container">
             <div class="navbar">
-                <a href="{% url 'home' %}" class="nav-brand">💍 WeddingVendors</a>
+                <a href="{% url 'home' %}" class="nav-brand" aria-label="Clink Entertainment home">
+                    <img src="{% static 'images/logo.webp' %}" alt="Clink Entertainment logo" class="nav-logo">
+                    <span>Clink Entertainment</span>
+                </a>
                 <div class="nav-menu">
                     <a href="{% url 'home' %}">Home</a>
-                    <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}">Musicians</a>
+                    <div class="mega-menu-wrapper">
+                        <button class="mega-toggle" type="button" aria-expanded="false" aria-controls="musicians-mega-menu">
+                            Musicians
+                            <span class="mega-caret">▾</span>
+                        </button>
+                        <div id="musicians-mega-menu" class="mega-menu" role="menu" aria-label="Musicians Categories">
+                            <div class="mega-menu-grid">
+                                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}?style=wedding-bands" class="mega-item" role="menuitem">
+                                    <strong>Wedding Bands</strong>
+                                    <span>Live full-band performances</span>
+                                </a>
+                                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}?style=acoustic-solo-duo" class="mega-item" role="menuitem">
+                                    <strong>Acoustic Solo/Duo</strong>
+                                    <span>Intimate acoustic sets</span>
+                                </a>
+                                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}?style=wedding-djs" class="mega-item" role="menuitem">
+                                    <strong>Wedding DJs</strong>
+                                    <span>Reception and dancefloor specialists</span>
+                                </a>
+                                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}?style=saxophone-players" class="mega-item" role="menuitem">
+                                    <strong>Saxophone Players</strong>
+                                    <span>Ceremony and cocktail hour vibes</span>
+                                </a>
+                                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}?style=pianist" class="mega-item" role="menuitem">
+                                    <strong>Pianist</strong>
+                                    <span>Elegant piano-led performances</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <a href="{% url 'bookings:vendor_list' vendor_type='caricaturists' %}">Caricaturists</a>
                     <a href="{% url 'bookings:vendor_list' vendor_type='photographers' %}">Photographers</a>
                     
@@ -24,13 +56,12 @@
                         <a href="#">Hi, {{ user.first_name }}</a>
                         {% if user.is_vendor %}
                             <a href="{% url 'vendors:vendor_dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
-                        {% else %}
-                            <a href="{% url 'bookings:my_enquiries' %}" class="btn btn-primary btn-sm">My Enquiries</a>
+                        {% elif user.is_staff %}
+                            <a href="/admin/" class="btn btn-primary btn-sm">Admin</a>
                         {% endif %}
                         <a href="{% url 'accounts:customer_logout' %}" class="btn btn-light btn-sm">Logout</a>
                     {% else %}
-                        <a href="{% url 'accounts:customer_login' %}" class="btn btn-outline btn-sm">Login</a>
-                        <a href="{% url 'accounts:customer_signup' %}" class="btn btn-primary btn-sm">Sign Up</a>
+                        <a href="{% url 'accounts:vendor_signup_choice' %}" class="btn btn-primary btn-sm">Become a Vendor</a>
                     {% endif %}
                 </div>
                 <div class="hamburger">
@@ -64,13 +95,13 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>About Us</h4>
-                    <p>WeddingVendors connects you with the best wedding professionals in your area. Find musicians, photographers, caricaturists and more.</p>
+                    <p>Clink Entertainment connects you with the best wedding professionals in your area. Find musicians, photographers, caricaturists and more.</p>
                 </div>
                 <div class="footer-section">
                     <h4>For Customers</h4>
                     <ul>
                         <li><a href="{% url 'home' %}">Browse Vendors</a></li>
-                        <li><a href="{% url 'accounts:customer_signup' %}">Create Account</a></li>
+                        <li><a href="#vendors">Explore Categories</a></li>
                         <li><a href="#">How It Works</a></li>
                         <li><a href="#">FAQ</a></li>
                     </ul>
@@ -79,6 +110,7 @@
                     <h4>For Vendors</h4>
                     <ul>
                         <li><a href="{% url 'accounts:vendor_signup_choice' %}">Register as Vendor</a></li>
+                        <li><a href="{% url 'accounts:vendor_login' %}">Vendor Login</a></li>
                         <li><a href="#">Pricing</a></li>
                         <li><a href="#">Vendor Dashboard</a></li>
                         <li><a href="#">Support</a></li>
@@ -86,13 +118,16 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: info@weddingvendors.com</p>
+                    <p>Email: info@Clink Entertainment.com</p>
                     <p>Phone: +44 (0) 123 456 7890</p>
                     <p>Follow us on social media</p>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 WeddingVendors. All rights reserved.</p>
+                <a href="{% url 'home' %}" class="footer-brand" aria-label="Clink Entertainment home">
+                    <img src="{% static 'images/logo.webp' %}" alt="Clink Entertainment logo" class="footer-logo">
+                </a>
+                <p>&copy; 2024 Clink Entertainment. All rights reserved.</p>
             </div>
         </div>
     </footer>

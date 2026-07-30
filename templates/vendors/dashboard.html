@@ -6,6 +6,62 @@
 <section>
     <div class="container">
         <h1 class="mb-4">Welcome, {{ request.user.first_name }}!</h1>
+
+        {% if vendor %}
+            <div class="card mb-4">
+                <div class="flex-between" style="align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                    <div>
+                        <h2 class="mb-1">{{ vendor.public_name }}</h2>
+                        <p class="text-muted mb-1">{{ vendor.vendor_type|title }} • {{ vendor.home_county }}, {{ vendor.home_country }}</p>
+                        <p class="text-muted">Starting from £{{ vendor.start_price }}</p>
+                    </div>
+                    <a href="{% url 'vendors:profile_edit' %}" class="btn btn-outline">Edit Profile</a>
+                </div>
+            </div>
+
+            {% if pending_profile_request %}
+                <div class="alert alert-info">
+                    Profile update submitted on {{ pending_profile_request.submitted_at|date:"d M Y H:i" }} and currently waiting for admin approval.
+                </div>
+            {% endif %}
+
+            {% if gallery_images %}
+                <div class="card mb-4">
+                    <h3 class="mb-2">Your Gallery</h3>
+                    <div class="grid grid-4">
+                        {% for image in gallery_images %}
+                            <div style="position: relative;">
+                                <img src="{{ image.image.url }}" alt="Gallery image {{ forloop.counter }}" style="width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                                {% if image.is_primary %}
+                                    <span class="badge badge-primary" style="position: absolute; left: 0.5rem; top: 0.5rem;">Main</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if gallery_videos %}
+                <div class="card mb-4">
+                    <h3 class="mb-2">YouTube Showcase</h3>
+                    <ul>
+                        {% for video in gallery_videos %}
+                            <li><a href="{{ video.youtube_url }}" target="_blank" rel="noopener">{{ video.youtube_url }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {% if not profile_complete %}
+            <div class="alert alert-warning">
+                <p><strong>Your act profile is not complete yet.</strong> Complete it so customers can trust and book you faster.</p>
+                {% if missing_profile_fields %}
+                    <p class="small mb-2">Missing: {{ missing_profile_fields|join:", " }}</p>
+                {% endif %}
+                <a href="{% url 'vendors:profile_edit' %}" class="btn btn-primary">Complete Profile</a>
+            </div>
+        {% endif %}
         
         <!-- Stats -->
         <div class="grid grid-4 mb-5">

@@ -2,47 +2,140 @@
 
 {% block title %}{{ vendor_type|title }} - WeddingVendors{% endblock %}
 
+{% block extra_css %}
+<style>
+.vendor-card {
+    display: flex;
+    gap: 1.4rem;
+    align-items: flex-start;
+}
+
+.vendor-card-image {
+    flex: 0 0 220px;
+    width: 220px;
+    height: 220px;
+    background: #f9fafb;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.vendor-card-image img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.vendor-card-body {
+    flex: 1;
+    min-width: 0;
+    padding-top: 0.2rem;
+}
+
+.vendor-rating {
+    color: #f59e0b;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    margin: 0.45rem 0 0.65rem;
+}
+
+.vendor-bio {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    line-height: 1.55;
+}
+
+@media (max-width: 768px) {
+    .vendor-list-title {
+        text-align: center;
+    }
+
+    .vendor-search-card label {
+        font-size: 0.82rem;
+        line-height: 1.2;
+    }
+
+    .vendor-search-card .form-group {
+        margin-bottom: 0.65rem !important;
+    }
+
+    .vendor-card {
+        display: block;
+    }
+
+    .vendor-card-image {
+        width: 100%;
+        height: 220px;
+        margin-bottom: 1rem;
+    }
+
+    .vendor-bio {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .vendor-card-body h3,
+    .vendor-rating {
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <section>
     <div class="container">
-        <h1 class="mb-4">{{ vendor_type|title }}</h1>
+        <h1 class="mb-4 vendor-list-title">{{ vendor_type|title }}</h1>
+
+        <div class="card mb-4 vendor-search-card">
+            <form method="get" class="grid grid-3" style="align-items: end; gap: 1rem;">
+                <div class="form-group" style="margin-bottom: 0; grid-column: span 2;">
+                    <label for="vendor-search">Search Acts</label>
+                    <input id="vendor-search" type="text" name="q" value="{{ search_query }}" placeholder="Search by act name, genre, location...">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="vendor-sort">Sort By</label>
+                    <select id="vendor-sort" name="sort">
+                        <option value="alphabetical" {% if sort_option == 'alphabetical' %}selected{% endif %}>Alphabetical</option>
+                        <option value="popular" {% if sort_option == 'popular' %}selected{% endif %}>Most Popular</option>
+                        <option value="price_low" {% if sort_option == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_high" {% if sort_option == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </div>
+                <div style="grid-column: 1 / -1; display: flex; gap: 0.75rem;">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                    <a href="{% url 'bookings:vendor_list' vendor_type=vendor_type %}" class="btn btn-light">Clear</a>
+                </div>
+            </form>
+        </div>
         
         {% if vendors %}
             <div class="grid grid-3">
                 {% for vendor in vendors %}
-                    <div class="card">
-                        {% if vendor.profile_image %}
-                            <img src="{{ vendor.profile_image.url }}" alt="{{ vendor.business_name }}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 0.5rem; margin-bottom: 1rem;">
-                        {% else %}
-                            <div style="width: 100%; height: 250px; background-color: var(--light-bg); border-radius: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
-                                🎭
-                            </div>
-                        {% endif %}
-                        
-                        <h3>{{ vendor.business_name }}</h3>
-                        
-                        <div class="flex-between mb-2">
-                            <span class="text-muted">{{ vendor.experience_years }} years experience</span>
-                            <span class="badge badge-primary">£{{ vendor.hourly_rate }}/hr</span>
+                    <div class="card vendor-card">
+                        <div class="vendor-card-image">
+                            {% if vendor.profile_image %}
+                                <img src="{{ vendor.profile_image.url }}" alt="{{ vendor.business_name }}">
+                            {% else %}
+                                <div style="font-size: 3rem;">🎭</div>
+                            {% endif %}
                         </div>
-                        
-                        {% if vendor_type == 'musicians' %}
-                            <p class="text-muted small"><strong>Instruments:</strong> {{ vendor.instruments }}</p>
-                            <p class="text-muted small"><strong>Genres:</strong> {{ vendor.genres }}</p>
-                        {% elif vendor_type == 'photographers' %}
-                            <p class="text-muted small"><strong>Specialization:</strong> {{ vendor.specialization }}</p>
-                            <p class="text-muted small"><strong>Style:</strong> {{ vendor.editing_style }}</p>
-                        {% elif vendor_type == 'caricaturists' %}
-                            <p class="text-muted small"><strong>Style:</strong> {{ vendor.style }}</p>
-                            <p class="text-muted small"><strong>Medium:</strong> {{ vendor.medium }}</p>
-                        {% endif %}
-                        
-                        <p class="text-muted small">📍 {{ vendor.location }}</p>
-                        
-                        <p style="margin: 1rem 0; font-size: 0.9rem;">{{ vendor.bio|truncatewords:20 }}</p>
-                        
-                        <div style="margin-top: 1.5rem;">
-                            <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}" class="btn btn-primary w-full">View Profile</a>
+
+                        <div class="vendor-card-body">
+                            <h3>{{ vendor.public_name }}</h3>
+                            <p class="vendor-rating" aria-label="5 out of 5 stars">★★★★★</p>
+                            <p class="vendor-bio">{{ vendor.bio|default:'No description available yet.'|truncatewords:35 }}</p>
+
+                            <div style="margin-top: 1.2rem;">
+                                <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}" class="btn btn-primary w-full">Enquire</a>
+                            </div>
                         </div>
                     </div>
                 {% endfor %}
@@ -52,8 +145,8 @@
             {% if is_paginated %}
                 <div style="text-align: center; margin-top: 2rem;">
                     {% if page_obj.has_previous %}
-                        <a href="?page=1" class="btn btn-light btn-sm">First</a>
-                        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-light btn-sm">Previous</a>
+                        <a href="?page=1{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">First</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">Previous</a>
                     {% endif %}
                     
                     <span style="margin: 0 1rem;">
@@ -61,8 +154,8 @@
                     </span>
                     
                     {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-light btn-sm">Next</a>
-                        <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-light btn-sm">Last</a>
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">Next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">Last</a>
                     {% endif %}
                 </div>
             {% endif %}

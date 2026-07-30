@@ -11,7 +11,7 @@
             <div class="grid grid-2">
                 {% for enquiry in enquiries %}
                     <div class="card">
-                        <h3>{{ enquiry.vendor.business_name }}</h3>
+                        <h3>{{ enquiry.vendor.public_name }}</h3>
                         <p class="text-muted small">📅 Event: {{ enquiry.event_date }}</p>
                         
                         <div class="flex-between mt-2 mb-3">

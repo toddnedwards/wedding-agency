@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - Clink Entertainment{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 860px;">
+        <article class="card">
+            <h1 class="mb-2">{{ post.title }}</h1>
+            <p class="text-muted small mb-3">{{ post.created_at|date:"d M Y" }}</p>
+            <div>
+                {{ post.content|linebreaks }}
+            </div>
+        </article>
+
+        {% if related_posts %}
+            <h2 class="mt-4 mb-3">Related Posts</h2>
+            <div class="grid grid-3">
+                {% for item in related_posts %}
+                    <div class="card">
+                        <h3><a href="{% url 'blog_detail' slug=item.slug %}">{{ item.title }}</a></h3>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

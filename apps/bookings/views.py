@@ -6,6 +6,8 @@ from django.urls import reverse_lazy
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.db.models import Count, Q
+from urllib.parse import parse_qs, urlparse
 from .models import Enquiry, EnquiryNotification
 from .forms import EnquiryForm
 from apps.vendors.models import Musician, Caricaturist, Photographer
@@ -19,19 +21,59 @@ class VendorListView(ListView):
     
     def get_queryset(self):
         vendor_type = self.kwargs.get('vendor_type')
-        
+        search_query = self.request.GET.get('q', '').strip()
+        sort = self.request.GET.get('sort', 'alphabetical')
+        style_filter = self.request.GET.get('style', '').strip()
+
         if vendor_type == 'musicians':
-            return Musician.objects.filter(is_active=True, is_approved=True)
+            queryset = Musician.objects.filter(is_active=True, is_approved=True)
+            style_map = {
+                'wedding-bands': 'wedding_band',
+                'acoustic-solo-duo': 'acoustic_solo_duo',
+                'wedding-djs': 'wedding_dj',
+                'saxophone-players': 'saxophone_player',
+                'pianist': 'pianist',
+            }
+            if style_filter in style_map:
+                queryset = queryset.filter(act_types=style_map[style_filter])
         elif vendor_type == 'caricaturists':
-            return Caricaturist.objects.filter(is_active=True, is_approved=True)
+            queryset = Caricaturist.objects.filter(is_active=True, is_approved=True)
         elif vendor_type == 'photographers':
-            return Photographer.objects.filter(is_active=True, is_approved=True)
+            queryset = Photographer.objects.filter(is_active=True, is_approved=True)
+        else:
+            return []
+
+        if search_query:
+            search_filter = (
+                Q(business_name__icontains=search_query)
+                | Q(act_name__icontains=search_query)
+                | Q(stage_name__icontains=search_query)
+                | Q(location__icontains=search_query)
+                | Q(bio__icontains=search_query)
+                | Q(act_types__icontains=search_query)
+            )
+            if vendor_type == 'musicians':
+                search_filter = search_filter | Q(instruments__icontains=search_query) | Q(genres__icontains=search_query)
+            queryset = queryset.filter(search_filter)
+
+        queryset = queryset.annotate(review_count=Count('reviews', distinct=True))
+
+        if sort == 'popular':
+            queryset = queryset.order_by('-review_count', 'business_name')
+        elif sort == 'price_low':
+            queryset = queryset.order_by('hourly_rate', 'business_name')
+        elif sort == 'price_high':
+            queryset = queryset.order_by('-hourly_rate', 'business_name')
+        else:
+            queryset = queryset.order_by('business_name')
         
-        return []
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['vendor_type'] = self.kwargs.get('vendor_type')
+        context['search_query'] = self.request.GET.get('q', '').strip()
+        context['sort_option'] = self.request.GET.get('sort', 'alphabetical')
         return context
 
 
@@ -39,6 +81,29 @@ class VendorDetailView(DetailView):
     """Display individual vendor profile and allow enquiry"""
     template_name = 'bookings/vendor_detail.html'
     context_object_name = 'vendor'
+
+    @staticmethod
+    def _youtube_embed_url(url):
+        """Normalize common YouTube URLs into embeddable URLs."""
+        if not url:
+            return ''
+
+        parsed = urlparse(url)
+        host = parsed.netloc.lower()
+        path = parsed.path.strip('/')
+        video_id = ''
+
+        if 'youtu.be' in host:
+            video_id = path.split('/')[0]
+        elif 'youtube.com' in host:
+            if path == 'watch':
+                video_id = parse_qs(parsed.query).get('v', [''])[0]
+            elif path.startswith('shorts/'):
+                video_id = path.split('/')[1] if len(path.split('/')) > 1 else ''
+            elif path.startswith('embed/'):
+                video_id = path.split('/')[1] if len(path.split('/')) > 1 else ''
+
+        return f'https://www.youtube.com/embed/{video_id}' if video_id else ''
     
     def get_object(self):
         vendor_type = self.kwargs.get('vendor_type')
@@ -55,8 +120,25 @@ class VendorDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        vendor = self.object
+        gallery_images = vendor.media_images.all().order_by('sort_order', 'id')
+        main_gallery_image = gallery_images.filter(is_primary=True).first() or gallery_images.first()
+        gallery_videos = vendor.media_videos.all().order_by('sort_order', 'id')
+        gallery_video_embeds = [
+            {
+                'url': item.youtube_url,
+                'embed_url': self._youtube_embed_url(item.youtube_url),
+            }
+            for item in gallery_videos
+            if item.youtube_url
+        ]
+
         context['vendor_type'] = self.kwargs.get('vendor_type')
         context['enquiry_form'] = EnquiryForm()
+        context['gallery_images'] = gallery_images
+        context['main_gallery_image'] = main_gallery_image
+        context['gallery_video_embeds'] = gallery_video_embeds
+        context['reviews'] = vendor.reviews.select_related('customer').all()
         return context
 
 
@@ -65,7 +147,7 @@ class EnquiryCreateView(CreateView):
     model = Enquiry
     form_class = EnquiryForm
     template_name = 'bookings/enquiry_form.html'
-    success_url = reverse_lazy('enquiry_confirmation')
+    success_url = reverse_lazy('bookings:enquiry_confirmation')
     
     def form_valid(self, form):
         enquiry = form.save(commit=False)

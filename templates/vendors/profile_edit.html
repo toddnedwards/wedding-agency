@@ -1,0 +1,616 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Clink Entertainment{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.readonly-value {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    color: var(--text-dark);
+}
+
+.price-input-wrap {
+    position: relative;
+}
+
+.price-prefix {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.price-input-wrap input[type="number"] {
+    padding-left: 1.95rem;
+}
+
+.bio-box textarea {
+    min-height: 180px;
+}
+
+.shopify-panel {
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.shopify-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.shopify-panel-header h3 {
+    margin: 0;
+}
+
+.shopify-muted {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.uniform-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 0.85rem;
+}
+
+.main-image-box {
+    border: 1px solid #d1d5db;
+    border-radius: 0.6rem;
+    padding: 0.65rem;
+    background: #fff;
+}
+
+.main-image-box img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 0.45rem;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+}
+
+.main-image-note {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.45rem;
+}
+
+@media (max-width: 860px) {
+    .uniform-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.media-card {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    cursor: move;
+}
+
+.media-card.dragging {
+    opacity: 0.45;
+}
+
+.media-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 0.4rem;
+    background: #f3f4f6;
+}
+
+.media-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+}
+
+.media-primary {
+    border: 1px solid #111827;
+    background: #fff;
+    color: #111827;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+}
+
+.media-primary.active {
+    background: #111827;
+    color: #fff;
+}
+
+.upload-strip {
+    border: 1px dashed #9ca3af;
+    border-radius: 0.6rem;
+    padding: 0.85rem;
+    background: #f9fafb;
+    margin-top: 0.75rem;
+}
+
+.dropzone {
+    border: 1.5px dashed #9ca3af;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dropzone:hover {
+    border-color: #111827;
+    background: #f9fafb;
+}
+
+.dropzone.is-dragover {
+    border-color: #111827;
+    background: #f3f4f6;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
+}
+
+.dropzone-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.dropzone-subtitle {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.9rem;
+}
+
+.video-field {
+    border: 1px solid #d1d5db;
+    border-radius: 0.65rem;
+    background: #ffffff;
+    padding: 0.65rem;
+}
+
+.video-field label {
+    font-size: 0.85rem;
+    color: #374151;
+    margin-bottom: 0.35rem;
+}
+
+.video-input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid #9ca3af;
+    border-radius: 0.55rem;
+    background: #f9fafb;
+    font-size: 0.95rem;
+}
+
+.video-input:focus {
+    outline: none;
+    border-color: #111827;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+    background: #fff;
+}
+
+.locked-note {
+    border-left: 4px solid var(--warning);
+    background: #fff8e1;
+    padding: 0.85rem;
+    border-radius: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="card" style="max-width: 960px; margin: 0 auto;">
+            <h1 class="mb-1">Edit Your Act Profile</h1>
+            <p class="text-muted mb-3">Profile updates are reviewed by admin before going live.</p>
+
+            <div class="locked-note mb-4">
+                <strong>Locked after signup:</strong> Name, email, act name, stage name, and service type cannot be changed here.
+            </div>
+
+            {% if pending_profile_request %}
+                <div class="alert alert-info">
+                    You already have a pending profile update submitted on {{ pending_profile_request.submitted_at|date:"d M Y H:i" }}.
+                    Submitting again will replace that pending request.
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-error mb-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="form-group mt-1 full-width">
+                    <div class="uniform-grid">
+                        <div class="shopify-panel">
+                            <div class="shopify-panel-header">
+                                <h3>Gallery Images</h3>
+                                <span class="badge badge-primary">Up to 10</span>
+                            </div>
+                            <p class="shopify-muted">Arrange the order by drag and drop, and choose one main image. Any update is submitted for admin approval before going live.</p>
+
+                            <div id="existingGallery" class="media-grid mt-2">
+                                {% for image in gallery_images %}
+                                    <div class="media-card" draggable="true" data-image-id="{{ image.id }}">
+                                        <img class="media-thumb" src="{{ image.image.url }}" alt="Gallery image {{ forloop.counter }}">
+                                        <div class="media-meta">
+                                            <span>#{{ forloop.counter }}</span>
+                                            <button type="button" class="media-primary {% if image.is_primary %}active{% endif %}">Main</button>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-muted small">No images yet. Add your first gallery images below.</p>
+                                {% endfor %}
+                            </div>
+
+                            <div class="upload-strip">
+                                <div id="galleryDropzone" class="dropzone" role="button" tabindex="0" aria-label="Choose images or drag and drop">
+                                    <div class="dropzone-title">Choose images</div>
+                                    <div class="dropzone-subtitle">Drag and drop images here, or click to browse.</div>
+                                </div>
+                                <input id="galleryInput" class="hidden-file-input" type="file" name="gallery_images" accept="image/*" multiple>
+                                <p class="shopify-muted">If you upload new images, that new set will be submitted as your replacement gallery.</p>
+                            </div>
+
+                            <div id="newGallery" class="media-grid mt-2"></div>
+                        </div>
+
+                        <div class="shopify-panel">
+                            <div class="shopify-panel-header">
+                                <h3>Main image</h3>
+                            </div>
+                            <p class="shopify-muted">Click Main on any gallery image to set it as your primary image.</p>
+                            <div class="main-image-box mt-2">
+                                {% if main_gallery_image %}
+                                    <img id="mainImagePreview" src="{{ main_gallery_image.image.url }}" alt="Current main image">
+                                    <div class="media-meta">
+                                        <span id="mainImageLabel">Primary</span>
+                                        <span class="badge badge-primary">Main image</span>
+                                    </div>
+                                    <p class="main-image-note">This preview updates when you choose a different main image.</p>
+                                {% else %}
+                                    <img id="mainImagePreview" src="" alt="Main image preview" style="display:none;">
+                                    <p id="mainImageEmptyText" class="text-muted small">No main image selected yet.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="existing_gallery_order" id="existingGalleryOrder">
+                    <input type="hidden" name="existing_primary_id" id="existingPrimaryId">
+                    <input type="hidden" name="new_gallery_order" id="newGalleryOrder">
+                    <input type="hidden" name="new_primary_index" id="newPrimaryIndex">
+                </div>
+
+                <div class="profile-edit-grid">
+                    {% for field in form %}
+                        {% if field.name != 'bio' and field.name != 'profile_image' %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% if field.name == 'start_price' %}
+                                    <div class="price-input-wrap">
+                                        <span class="price-prefix" aria-hidden="true">£</span>
+                                        {{ field }}
+                                    </div>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <p class="text-muted small" style="margin-top: 0.25rem;">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="form-error">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="form-group">
+                        <label>Number of Members</label>
+                        <div class="readonly-value">{{ locked_profile_values.number_of_members }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Act Home County</label>
+                        <div class="readonly-value">{{ locked_profile_values.home_county }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Act Home Country</label>
+                        <div class="readonly-value">{{ locked_profile_values.home_country }}</div>
+                    </div>
+
+                    {% for field in form %}
+                        {% if field.name == 'bio' %}
+                            <div class="form-group full-width bio-box">
+                                <label for="{{ field.id_for_label }}">{{ field.label }} (max 250 characters)</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="text-muted small" style="margin-top: 0.25rem;">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="form-error">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="form-group mt-4">
+                    <div class="shopify-panel">
+                        <div class="shopify-panel-header">
+                            <h3>YouTube Videos</h3>
+                            <span class="badge badge-primary">Up to 4</span>
+                        </div>
+                        <p class="shopify-muted">Add full YouTube links to showcase performances.</p>
+                        <div class="video-grid mt-2">
+                            <div class="video-field">
+                                <label for="youtube_1">Video 1</label>
+                                <input class="video-input" id="youtube_1" type="url" name="youtube_links" value="{{ video_links.0 }}" placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
+                            <div class="video-field">
+                                <label for="youtube_2">Video 2</label>
+                                <input class="video-input" id="youtube_2" type="url" name="youtube_links" value="{{ video_links.1 }}" placeholder="https://youtu.be/...">
+                            </div>
+                            <div class="video-field">
+                                <label for="youtube_3">Video 3</label>
+                                <input class="video-input" id="youtube_3" type="url" name="youtube_links" value="{{ video_links.2 }}" placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
+                            <div class="video-field">
+                                <label for="youtube_4">Video 4</label>
+                                <input class="video-input" id="youtube_4" type="url" name="youtube_links" value="{{ video_links.3 }}" placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-between" style="gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem;">
+                    <a href="{% url 'vendors:vendor_dashboard' %}" class="btn btn-light">Back to Dashboard</a>
+                    <button type="submit" class="btn btn-primary">Submit For Approval</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const existingGallery = document.getElementById('existingGallery');
+    const newGallery = document.getElementById('newGallery');
+    const galleryInput = document.getElementById('galleryInput');
+    const existingOrderInput = document.getElementById('existingGalleryOrder');
+    const existingPrimaryInput = document.getElementById('existingPrimaryId');
+    const newOrderInput = document.getElementById('newGalleryOrder');
+    const newPrimaryInput = document.getElementById('newPrimaryIndex');
+    const dropzone = document.getElementById('galleryDropzone');
+    const mainImagePreview = document.getElementById('mainImagePreview');
+    const mainImageLabel = document.getElementById('mainImageLabel');
+    const mainImageEmptyText = document.getElementById('mainImageEmptyText');
+
+    function updateMainImagePreview(card, sourceType) {
+        if (!mainImagePreview || !card) return;
+        const img = card.querySelector('img');
+        if (!img) return;
+
+        mainImagePreview.src = img.src;
+        mainImagePreview.style.display = '';
+        if (mainImageEmptyText) {
+            mainImageEmptyText.style.display = 'none';
+        }
+        if (mainImageLabel) {
+            mainImageLabel.textContent = sourceType === 'new' ? 'Pending primary' : 'Primary';
+        }
+    }
+
+    function setFilesOnInput(files) {
+        if (!galleryInput || !files) return;
+        const dt = new DataTransfer();
+        Array.from(files).slice(0, 10).forEach((file) => dt.items.add(file));
+        galleryInput.files = dt.files;
+        renderNewGallery();
+    }
+
+    function initSortable(container) {
+        if (!container) return;
+        let dragEl = null;
+
+        container.addEventListener('dragstart', (event) => {
+            const card = event.target.closest('.media-card');
+            if (!card) return;
+            dragEl = card;
+            card.classList.add('dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        });
+
+        container.addEventListener('dragend', () => {
+            if (dragEl) dragEl.classList.remove('dragging');
+            dragEl = null;
+            syncHiddenFields();
+        });
+
+        container.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            const target = event.target.closest('.media-card');
+            if (!target || target === dragEl || !dragEl) return;
+            const rect = target.getBoundingClientRect();
+            const after = event.clientY > rect.top + rect.height / 2;
+            container.insertBefore(dragEl, after ? target.nextSibling : target);
+        });
+    }
+
+    function markPrimary(container, card) {
+        if (!container || !card) return;
+        container.querySelectorAll('.media-primary').forEach((btn) => btn.classList.remove('active'));
+        const btn = card.querySelector('.media-primary');
+        if (btn) btn.classList.add('active');
+        const sourceType = container === newGallery ? 'new' : 'existing';
+        updateMainImagePreview(card, sourceType);
+        syncHiddenFields();
+    }
+
+    function bindPrimaryButtons(container) {
+        if (!container) return;
+        container.querySelectorAll('.media-card').forEach((card) => {
+            const button = card.querySelector('.media-primary');
+            if (!button) return;
+            button.addEventListener('click', () => markPrimary(container, card));
+        });
+    }
+
+    function renderNewGallery() {
+        if (!newGallery || !galleryInput) return;
+        newGallery.innerHTML = '';
+        const files = Array.from(galleryInput.files || []).slice(0, 10);
+        files.forEach((file, index) => {
+            const card = document.createElement('div');
+            card.className = 'media-card';
+            card.draggable = true;
+            card.dataset.newIndex = String(index);
+
+            const img = document.createElement('img');
+            img.className = 'media-thumb';
+            img.alt = 'New gallery image';
+            img.src = URL.createObjectURL(file);
+            img.onload = () => URL.revokeObjectURL(img.src);
+
+            const meta = document.createElement('div');
+            meta.className = 'media-meta';
+
+            const orderLabel = document.createElement('span');
+            orderLabel.textContent = `#${index + 1}`;
+
+            const primaryBtn = document.createElement('button');
+            primaryBtn.type = 'button';
+            primaryBtn.className = 'media-primary';
+            primaryBtn.textContent = 'Main';
+
+            meta.appendChild(orderLabel);
+            meta.appendChild(primaryBtn);
+
+            card.appendChild(img);
+            card.appendChild(meta);
+            newGallery.appendChild(card);
+        });
+
+        bindPrimaryButtons(newGallery);
+        const first = newGallery.querySelector('.media-card');
+        if (first) markPrimary(newGallery, first);
+        syncHiddenFields();
+    }
+
+    function syncHiddenFields() {
+        if (existingGallery && existingOrderInput) {
+            const ids = Array.from(existingGallery.querySelectorAll('.media-card')).map((card) => card.dataset.imageId).filter(Boolean);
+            existingOrderInput.value = ids.join(',');
+            const active = existingGallery.querySelector('.media-primary.active');
+            const activeCard = active ? active.closest('.media-card') : null;
+            existingPrimaryInput.value = activeCard ? activeCard.dataset.imageId : (ids[0] || '');
+        }
+
+        if (newGallery && newOrderInput) {
+            const order = Array.from(newGallery.querySelectorAll('.media-card')).map((card) => card.dataset.newIndex).filter(Boolean);
+            newOrderInput.value = order.join(',');
+            const active = newGallery.querySelector('.media-primary.active');
+            const activeCard = active ? active.closest('.media-card') : null;
+            newPrimaryInput.value = activeCard ? activeCard.dataset.newIndex : (order[0] || '');
+        }
+    }
+
+    initSortable(existingGallery);
+    initSortable(newGallery);
+    bindPrimaryButtons(existingGallery);
+
+    if (existingGallery && existingGallery.querySelector('.media-card') && !existingGallery.querySelector('.media-primary.active')) {
+        markPrimary(existingGallery, existingGallery.querySelector('.media-card'));
+    } else {
+        syncHiddenFields();
+    }
+
+    if (galleryInput) {
+        galleryInput.addEventListener('change', renderNewGallery);
+    }
+
+    if (dropzone && galleryInput) {
+        dropzone.addEventListener('click', () => galleryInput.click());
+
+        dropzone.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                galleryInput.click();
+            }
+        });
+
+        dropzone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropzone.classList.add('is-dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('is-dragover');
+        });
+
+        dropzone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropzone.classList.remove('is-dragover');
+            const files = event.dataTransfer ? event.dataTransfer.files : null;
+            if (files && files.length) {
+                setFilesOnInput(files);
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from django.views.generic import CreateView
+from django.views.generic import CreateView, FormView
 from django.contrib.auth import authenticate, login
 from django.urls import reverse_lazy
-from .forms import CustomerSignupForm, CustomerLoginForm, VendorSignupForm
+from .forms import CustomerSignupForm, CustomerLoginForm, VendorTypeChoiceForm
 from .models import CustomUser
 
 
@@ -28,15 +28,17 @@ class CustomerSignupView(CreateView):
         
         # Log user in
         user = authenticate(email=user.email, password=password)
+        if user is None:
+            user = authenticate(username=user.email, password=password)
         if user is not None:
             login(self.request, user)
         
         return super().form_valid(form)
 
 
-class VendorSignupChoiceView(CreateView):
+class VendorSignupChoiceView(FormView):
     """Let user choose vendor type before signup"""
-    form_class = VendorSignupForm
+    form_class = VendorTypeChoiceForm
     template_name = 'accounts/vendor_signup_choice.html'
     
     def form_valid(self, form):
@@ -53,6 +55,8 @@ def customer_login(request):
             password = form.cleaned_data.get('password')
             
             user = authenticate(request, email=email, password=password)
+            if user is None:
+                user = authenticate(request, username=email, password=password)
             if user is not None:
                 login(request, user)
                 return redirect('home')

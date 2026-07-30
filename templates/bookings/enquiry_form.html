@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Enquiry - Clink Entertainment{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="card" style="max-width: 760px; margin: 0 auto;">
+            <h1 class="mb-1">Send an Enquiry</h1>
+            <p class="text-muted mb-4">Tell the vendor about your event and requirements.</p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-error mb-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="form-error">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary">Submit Enquiry</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -13,6 +13,13 @@ class Vendor(models.Model):
     
     user = models.OneToOneField('accounts.CustomUser', on_delete=models.CASCADE)
     vendor_type = models.CharField(max_length=20, choices=VENDOR_TYPES)
+    act_name = models.CharField(max_length=200, default='')
+    stage_name = models.CharField(max_length=200, blank=True, default='')
+    act_types = models.CharField(max_length=300, blank=True, default='')
+    number_of_members = models.IntegerField(validators=[MinValueValidator(1)], default=1)
+    home_county = models.CharField(max_length=100, default='')
+    home_country = models.CharField(max_length=100, default='')
+    start_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0)
     business_name = models.CharField(max_length=200)
     bio = models.TextField()
     profile_image = models.ImageField(upload_to='vendors/')
@@ -29,11 +36,147 @@ class Vendor(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    class Meta:
-        abstract = True
-    
     def __str__(self):
         return self.business_name
+
+    @property
+    def public_name(self):
+        """Public-facing name shown on the website."""
+        if self.stage_name and str(self.stage_name).strip():
+            return self.stage_name.strip()
+        if self.act_name and str(self.act_name).strip():
+            return self.act_name.strip()
+        return self.business_name
+
+
+class VendorMediaImage(models.Model):
+    """Approved gallery images shown on the live vendor profile."""
+    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='media_images')
+    image = models.ImageField(upload_to='vendors/gallery/')
+    sort_order = models.PositiveIntegerField(default=0)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class VendorMediaVideo(models.Model):
+    """Approved YouTube links shown on the live vendor profile."""
+    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='media_videos')
+    youtube_url = models.URLField()
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class VendorProfileUpdateRequest(models.Model):
+    """Vendor-submitted profile changes awaiting admin approval."""
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+    ]
+
+    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='update_requests')
+    requested_by = models.ForeignKey('accounts.CustomUser', on_delete=models.CASCADE, related_name='vendor_update_requests')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    field_data = models.JSONField(default=dict, blank=True)
+    pending_profile_image = models.ImageField(upload_to='vendors/pending/', blank=True, null=True)
+    review_notes = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    reviewed_by = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='vendor_update_reviews',
+    )
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"Update Request #{self.id} for {self.vendor.business_name} ({self.status})"
+
+    def apply_approved_changes(self, reviewed_by=None):
+        """Apply approved data/media to live vendor profile."""
+        for field_name, value in (self.field_data or {}).items():
+            if hasattr(self.vendor, field_name):
+                setattr(self.vendor, field_name, value)
+
+        if self.pending_profile_image:
+            self.vendor.profile_image = self.pending_profile_image
+
+        self.vendor.business_name = self.vendor.public_name
+        self.vendor.hourly_rate = self.vendor.start_price
+        self.vendor.location = f"{self.vendor.home_county}, {self.vendor.home_country}"
+        self.vendor.save()
+
+        draft_images = list(self.draft_images.all())
+        if draft_images:
+            VendorMediaImage.objects.filter(vendor=self.vendor).delete()
+            created_images = []
+            for item in draft_images:
+                created_images.append(
+                    VendorMediaImage.objects.create(
+                        vendor=self.vendor,
+                        image=item.image,
+                        sort_order=item.sort_order,
+                        is_primary=item.is_primary,
+                    )
+                )
+
+            primary = next((img for img in created_images if img.is_primary), None)
+            if primary is None and created_images:
+                primary = created_images[0]
+                primary.is_primary = True
+                primary.save(update_fields=['is_primary'])
+            if primary is not None:
+                self.vendor.profile_image = primary.image
+                self.vendor.save(update_fields=['profile_image'])
+
+        draft_videos = list(self.draft_videos.all())
+        if draft_videos:
+            VendorMediaVideo.objects.filter(vendor=self.vendor).delete()
+            for item in draft_videos:
+                VendorMediaVideo.objects.create(
+                    vendor=self.vendor,
+                    youtube_url=item.youtube_url,
+                    sort_order=item.sort_order,
+                )
+
+        self.status = self.STATUS_APPROVED
+        self.reviewed_at = timezone.now()
+        self.reviewed_by = reviewed_by
+        self.save(update_fields=['status', 'reviewed_at', 'reviewed_by'])
+
+
+class VendorProfileImageDraft(models.Model):
+    """Draft gallery images attached to an update request."""
+    update_request = models.ForeignKey('vendors.VendorProfileUpdateRequest', on_delete=models.CASCADE, related_name='draft_images')
+    image = models.ImageField(upload_to='vendors/pending/gallery/')
+    sort_order = models.PositiveIntegerField(default=0)
+    is_primary = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+
+class VendorProfileVideoDraft(models.Model):
+    """Draft YouTube links attached to an update request."""
+    update_request = models.ForeignKey('vendors.VendorProfileUpdateRequest', on_delete=models.CASCADE, related_name='draft_videos')
+    youtube_url = models.URLField()
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
 
 
 class Musician(Vendor):
@@ -53,7 +196,10 @@ class Musician(Vendor):
     instruments = models.CharField(max_length=200)  # Comma-separated or CharField for primary instrument
     genres = models.CharField(max_length=200)  # Comma-separated genres
     can_provide_sound_system = models.BooleanField(default=False)
-    ensemble_size = models.IntegerField(validators=[MinValueValidator(1)])
+    sound_system_details = models.TextField(blank=True)
+    can_provide_lighting_system = models.BooleanField(default=False)
+    lighting_system_details = models.TextField(blank=True)
+    ensemble_size = models.IntegerField(validators=[MinValueValidator(1)], default=1)
     
     class Meta:
         verbose_name_plural = 'Musicians'

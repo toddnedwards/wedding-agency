@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Choose Vendor Type - WeddingVendors{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="card" style="max-width: 560px; margin: 0 auto;">
+            <h2 class="text-center mb-1">Register as a Vendor</h2>
+            <p class="text-center text-muted mb-4">Choose your service category to continue</p>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>{{ form.vendor_type.label }}</label>
+                    <div style="display: grid; gap: 0.75rem; margin-top: 0.5rem;">
+                        {% for radio in form.vendor_type %}
+                            <label style="display: flex; align-items: center; gap: 0.65rem; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer;">
+                                {{ radio.tag }}
+                                <span>{{ radio.choice_label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.vendor_type.errors %}
+                        <div class="form-error">{{ form.vendor_type.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full btn-lg" style="margin-top: 1.5rem;">Continue to Vendor Registration</button>
+
+                <p class="text-center mt-3" style="border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                    Already a vendor? <a href="{% url 'accounts:vendor_login' %}" class="text-primary">Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

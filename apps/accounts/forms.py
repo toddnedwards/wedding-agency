@@ -103,6 +103,20 @@ class VendorSignupForm(forms.ModelForm):
         return cleaned_data
 
 
+class VendorTypeChoiceForm(forms.Form):
+    """Form for choosing vendor category before full signup"""
+    vendor_type = forms.ChoiceField(
+        choices=[
+            ('musician', 'Musician'),
+            ('caricaturist', 'Caricaturist'),
+            ('photographer', 'Photographer'),
+        ],
+        widget=forms.RadioSelect(attrs={
+            'class': 'h-4 w-4 text-purple-600',
+        })
+    )
+
+
 class CustomerLoginForm(forms.Form):
     """Form for customers to login"""
     email = forms.EmailField(widget=forms.EmailInput(attrs={
