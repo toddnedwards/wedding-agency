@@ -1,0 +1,41 @@
+<section class="admin-alerts" aria-label="Admin notifications">
+    <div class="admin-alert-card admin-alert-card-enquiries">
+        <div class="admin-alert-header">
+            <h2 class="tracking-wide uppercase text-xs">New Enquiries</h2>
+            <span class="admin-alert-count">{{ new_enquiries_count }}</span>
+        </div>
+
+        {% if new_enquiries_count > 0 %}
+            <ul class="admin-alert-list">
+                {% for enquiry in recent_new_enquiries %}
+                    <li>
+                        #{{ enquiry.id }} {{ enquiry.customer_name }} for {{ enquiry.vendor.public_name }}
+                    </li>
+                {% endfor %}
+            </ul>
+            <a href="{{ enquiries_url }}" class="button">Review Enquiries</a>
+        {% else %}
+            <p class="admin-alert-empty">No new enquiries right now.</p>
+        {% endif %}
+    </div>
+
+    <div class="admin-alert-card admin-alert-card-updates">
+        <div class="admin-alert-header">
+            <h2 class="tracking-wide uppercase text-xs">Profile Changes To Approve</h2>
+            <span class="admin-alert-count">{{ pending_updates_count }}</span>
+        </div>
+
+        {% if pending_updates_count > 0 %}
+            <ul class="admin-alert-list">
+                {% for update in recent_pending_updates %}
+                    <li>
+                        Request #{{ update.id }} from {{ update.vendor.public_name }}
+                    </li>
+                {% endfor %}
+            </ul>
+            <a href="{{ updates_url }}" class="button">Review Requests</a>
+        {% else %}
+            <p class="admin-alert-empty">No pending profile update requests.</p>
+        {% endif %}
+    </div>
+</section>

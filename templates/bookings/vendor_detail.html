@@ -553,7 +553,7 @@
                                 class="like-act-btn js-like-act-toggle"
                                 data-act-id="{{ vendor_type }}-{{ vendor.id }}"
                                 data-act-name="{{ vendor.public_name }}"
-                                data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}"
+                                data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}"
                                 data-act-type="{{ vendor_type|title }}"
                                 data-act-location="{{ vendor.location }}"
                                 data-act-image="{% if main_gallery_image %}{{ main_gallery_image.image.url }}{% elif vendor.profile_image %}{{ vendor.profile_image.url }}{% endif %}"

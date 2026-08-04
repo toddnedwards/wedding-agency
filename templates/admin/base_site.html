@@ -1,0 +1,116 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | The Best Entertainment Admin{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    brandPrimary: '#9333ea',
+                    brandPrimaryDark: '#7e22ce',
+                    brandSecondary: '#ec4899',
+                    brandInk: '#1e293b',
+                },
+            },
+        },
+    };
+</script>
+<style>
+:root {
+    --admin-brand-primary: #9333ea;
+    --admin-brand-primary-dark: #7e22ce;
+    --admin-brand-secondary: #ec4899;
+    --admin-brand-ink: #1e293b;
+    --admin-brand-soft: #f5ebff;
+}
+
+#header {
+    background: linear-gradient(135deg, var(--admin-brand-primary) 0%, var(--admin-brand-secondary) 100%);
+    color: #fff;
+}
+
+#header a:link,
+#header a:visited {
+    color: #fff;
+}
+
+#branding h1 {
+    margin: 0;
+    padding: 0;
+}
+
+.admin-logo-link {
+    display: inline-flex;
+    align-items: center;
+}
+
+.admin-logo {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px;
+}
+
+#user-tools {
+    font-weight: 600;
+}
+
+div.breadcrumbs {
+    background: #f8fafc;
+    color: var(--admin-brand-ink);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+div.breadcrumbs a {
+    color: var(--admin-brand-primary-dark);
+}
+
+.module h2,
+.module caption,
+.inline-group h2 {
+    background: var(--admin-brand-soft);
+    color: var(--admin-brand-ink);
+}
+
+.button,
+input[type=submit],
+input[type=button],
+.submit-row input,
+a.button {
+    background: var(--admin-brand-primary);
+    border-color: var(--admin-brand-primary);
+}
+
+.button:hover,
+input[type=submit]:hover,
+input[type=button]:hover,
+.submit-row input:hover,
+a.button:hover {
+    background: var(--admin-brand-primary-dark);
+}
+
+@media (max-width: 768px) {
+    .admin-logo {
+        width: 68px;
+        height: 68px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}" class="admin-logo-link" aria-label="The Best Entertainment admin home">
+        <img src="{% static 'images/logo.png' %}" alt="The Best Entertainment logo" class="admin-logo">
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

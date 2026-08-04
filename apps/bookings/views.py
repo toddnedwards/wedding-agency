@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView
 from django.contrib.auth.decorators import login_required
@@ -9,10 +10,13 @@ from django.conf import settings
 from django.db.models import Count, Q
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from urllib.parse import parse_qs, urlparse
 from .models import Enquiry, EnquiryNotification
 from .forms import EnquiryForm
 from apps.vendors.models import Musician, Caricaturist, Photographer
+
+logger = logging.getLogger(__name__)
 
 
 VENDOR_MODEL_MAP = {
@@ -20,6 +24,29 @@ VENDOR_MODEL_MAP = {
     'caricaturists': Caricaturist,
     'photographers': Photographer,
 }
+
+
+def _get_vendor_queryset(vendor_type):
+    model = VENDOR_MODEL_MAP.get(vendor_type)
+    if not model:
+        return None
+    return model.objects.filter(is_active=True, is_approved=True)
+
+
+def vendor_detail_legacy_redirect(request, vendor_type, pk):
+    queryset = _get_vendor_queryset(vendor_type)
+    if queryset is None:
+        return redirect('bookings:vendor_list', vendor_type=vendor_type)
+
+    vendor = get_object_or_404(queryset, pk=pk)
+    if not vendor.slug:
+        vendor.slug = vendor.build_unique_slug(vendor.public_name, vendor.pk)
+        vendor.save(update_fields=['slug'])
+
+    return redirect(
+        reverse('bookings:vendor_detail', kwargs={'vendor_type': vendor_type, 'slug': vendor.slug}),
+        permanent=True,
+    )
 
 
 def _parse_multi_act_token(raw_token):
@@ -238,16 +265,13 @@ class VendorDetailView(DetailView):
     
     def get_object(self):
         vendor_type = self.kwargs.get('vendor_type')
-        vendor_id = self.kwargs.get('pk')
-        
-        if vendor_type == 'musicians':
-            return get_object_or_404(Musician, pk=vendor_id, is_active=True, is_approved=True)
-        elif vendor_type == 'caricaturists':
-            return get_object_or_404(Caricaturist, pk=vendor_id, is_active=True, is_approved=True)
-        elif vendor_type == 'photographers':
-            return get_object_or_404(Photographer, pk=vendor_id, is_active=True, is_approved=True)
-        
-        return None
+        vendor_slug = self.kwargs.get('slug')
+        queryset = _get_vendor_queryset(vendor_type)
+
+        if queryset is None:
+            return None
+
+        return get_object_or_404(queryset, slug=vendor_slug)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -301,13 +325,40 @@ class EnquiryCreateView(CreateView):
         enquiry.save()
         
         # Send notifications
-        self._send_notifications(enquiry)
+        notification_sent = self._send_notifications(enquiry)
+        if not notification_sent:
+            messages.warning(
+                self.request,
+                'Your enquiry was received, but email notifications could not be sent right now. Please contact us directly if needed.'
+            )
         
         return super().form_valid(form)
+    
+    def _send_mail_with_fallback(self, subject, message, recipient_list):
+        """Send an email and log failures without breaking the enquiry flow."""
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                recipient_list,
+                html_message=message,
+                fail_silently=False,
+            )
+            return True
+        except Exception as exc:
+            logger.exception(
+                'Failed to send enquiry email to %s with subject "%s": %s',
+                recipient_list,
+                subject,
+                exc,
+            )
+            return False
     
     def _send_notifications(self, enquiry, selected_acts=None):
         """Send notifications to vendor and admin"""
         selected_acts = selected_acts or []
+        sent_any = False
         
         # Notify vendor
         vendor_email = enquiry.vendor.user.email
@@ -328,14 +379,8 @@ class EnquiryCreateView(CreateView):
         vendor_subject = f"New Enquiry: {enquiry.customer_name} - {enquiry.event_date}"
         vendor_message = render_to_string('bookings/emails/vendor_enquiry.html', vendor_context)
         
-        send_mail(
-            vendor_subject,
-            vendor_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [vendor_email],
-            html_message=vendor_message,
-            fail_silently=True,
-        )
+        vendor_sent = self._send_mail_with_fallback(vendor_subject, vendor_message, [vendor_email])
+        sent_any = sent_any or vendor_sent
         
         # Create notification record for vendor
         EnquiryNotification.objects.create(
@@ -343,7 +388,7 @@ class EnquiryCreateView(CreateView):
             notification_type='vendor_new_enquiry',
             recipient_email=vendor_email,
             recipient_name=enquiry.vendor.business_name,
-            sent=True,
+            sent=vendor_sent,
         )
         
         # Notify admin
@@ -359,14 +404,8 @@ class EnquiryCreateView(CreateView):
         admin_subject = f"Enquiry Forwarded: {enquiry.customer_name} → {enquiry.vendor.business_name}"
         admin_message = render_to_string('bookings/emails/admin_enquiry.html', admin_context)
         
-        send_mail(
-            admin_subject,
-            admin_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [settings.ADMIN_EMAIL],
-            html_message=admin_message,
-            fail_silently=True,
-        )
+        admin_sent = self._send_mail_with_fallback(admin_subject, admin_message, [settings.ADMIN_EMAIL])
+        sent_any = sent_any or admin_sent
         
         # Create notification record for admin
         EnquiryNotification.objects.create(
@@ -374,7 +413,7 @@ class EnquiryCreateView(CreateView):
             notification_type='admin_new_enquiry',
             recipient_email=settings.ADMIN_EMAIL,
             recipient_name='Admin',
-            sent=True,
+            sent=admin_sent,
         )
         
         # Send customer confirmation
@@ -388,14 +427,10 @@ class EnquiryCreateView(CreateView):
         customer_subject = "Your Enquiry Has Been Received"
         customer_message = render_to_string('bookings/emails/customer_confirmation.html', customer_context)
         
-        send_mail(
-            customer_subject,
-            customer_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [enquiry.customer_email],
-            html_message=customer_message,
-            fail_silently=True,
-        )
+        customer_sent = self._send_mail_with_fallback(customer_subject, customer_message, [enquiry.customer_email])
+        sent_any = sent_any or customer_sent
+        
+        return sent_any
 
 
 class MultiActEnquiryView(EnquiryCreateView):

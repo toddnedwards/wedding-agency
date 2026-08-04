@@ -57,6 +57,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'admin_notifications': 'apps.core.templatetags.admin_notifications',
+            },
         },
     },
 ]
@@ -122,11 +125,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.hostinger.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='info@thebestentertainment.com')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@weddingagency.com')
-ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@weddingagency.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='info@thebestentertainment.com')
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='info@thebestentertainment.com')
+EMAIL_FAIL_SILENTLY = config('EMAIL_FAIL_SILENTLY', default=False, cast=bool)

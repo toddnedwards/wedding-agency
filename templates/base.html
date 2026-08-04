@@ -84,6 +84,15 @@
         </div>
     </nav>
 
+    {% if user.is_authenticated and user.is_vendor %}
+    <div class="vendor-mobile-banner" aria-label="Vendor quick access">
+        <div class="container vendor-mobile-banner-inner">
+            <p class="vendor-mobile-greeting">Hi {{ user.vendor.act_name|default:user.vendor.public_name }}!</p>
+            <a href="{% url 'vendors:vendor_dashboard' %}" class="btn btn-primary btn-sm">Dashboard</a>
+        </div>
+    </div>
+    {% endif %}
+
     <aside id="liked-acts-panel" class="liked-panel" aria-hidden="true" aria-label="Liked acts"
         data-multi-enquiry-url="{% url 'bookings:multi_act_enquiry' %}">
         <div class="liked-panel-header">
@@ -141,7 +150,9 @@
                         <li><a href="{% url 'accounts:vendor_signup_choice' %}">Register as Vendor</a></li>
                         <li><a href="{% url 'accounts:vendor_login' %}">Vendor Login</a></li>
                         <li><a href="#">Pricing</a></li>
+                        {% if user.is_authenticated and user.is_vendor %}
                         <li><a href="#">Vendor Dashboard</a></li>
+                        {% endif %}
                         <li><a href="#">Support</a></li>
                     </ul>
                 </div>
@@ -150,6 +161,30 @@
                     <p>Email: <a href="mailto:info@thebestentertainment.com" target="_blank">info@thebestentertainment.com</a></p>
                     <p>Phone: +44 (0) 123 456 7890</p>
                     <p>Follow us on social media</p>
+                    <div class="footer-social-links" aria-label="Social media links">
+                        <a
+                            href="https://www.facebook.com/profile.php?id=61592513138054"
+                            class="footer-social-link"
+                            aria-label="Follow us on Facebook"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.25.2 2.25.2v2.46h-1.27c-1.25 0-1.64.78-1.64 1.57V12h2.8l-.45 2.89h-2.35v6.99A10 10 0 0 0 22 12Z" fill="currentColor"/>
+                            </svg>
+                        </a>
+                        <a
+                            href="https://www.instagram.com/thebestentertainmentagency/"
+                            class="footer-social-link"
+                            aria-label="Follow us on Instagram"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 1.8A3.7 3.7 0 0 0 3.8 7.5v9a3.7 3.7 0 0 0 3.7 3.7h9a3.7 3.7 0 0 0 3.7-3.7v-9a3.7 3.7 0 0 0-3.7-3.7h-9Zm9.45 1.35a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z" fill="currentColor"/>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="footer-bottom">

@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
+from django.utils.text import slugify
 from datetime import timedelta
 
 class Vendor(models.Model):
@@ -16,6 +17,7 @@ class Vendor(models.Model):
     vendor_type = models.CharField(max_length=20, choices=VENDOR_TYPES)
     act_name = models.CharField(max_length=200, default='')
     stage_name = models.CharField(max_length=200, blank=True, default='')
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
     act_types = models.CharField(max_length=300, blank=True, default='')
     number_of_members = models.IntegerField(validators=[MinValueValidator(1)], default=1)
     home_county = models.CharField(max_length=100, default='')
@@ -39,6 +41,28 @@ class Vendor(models.Model):
     
     def __str__(self):
         return self.business_name
+
+    @classmethod
+    def build_unique_slug(cls, source_text, instance_id=None):
+        """Create a unique, URL-safe slug for a vendor record."""
+        base_slug = slugify(source_text or '') or 'vendor'
+        candidate = base_slug
+        counter = 2
+
+        while True:
+            qs = cls.objects.filter(slug=candidate)
+            if instance_id:
+                qs = qs.exclude(pk=instance_id)
+            if not qs.exists():
+                return candidate
+            candidate = f"{base_slug}-{counter}"
+            counter += 1
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            slug_source = self.act_name or self.stage_name or self.business_name
+            self.slug = self.build_unique_slug(slug_source, self.pk)
+        super().save(*args, **kwargs)
 
     @property
     def public_name(self):

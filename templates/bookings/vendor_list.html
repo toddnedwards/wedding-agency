@@ -62,7 +62,22 @@
     color: #f59e0b;
     font-size: 1rem;
     letter-spacing: 0.08em;
-    margin: 0.45rem 0 0.65rem;
+    margin: 0;
+}
+
+.vendor-rating-price {
+    margin: 0.45rem 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.vendor-price-badge {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    padding: 0.22rem 0.6rem;
+    text-transform: none;
 }
 
 .vendor-bio {
@@ -139,8 +154,15 @@
     }
 
     .vendor-card-body h3,
-    .vendor-rating {
+    .vendor-rating,
+    .vendor-rating-price {
         text-align: center;
+    }
+
+    .vendor-rating-price {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
     }
 }
 </style>
@@ -183,7 +205,7 @@
                 {% for vendor in vendors %}
                     <div
                         class="card vendor-card clickable-card js-vendor-card-link"
-                        data-card-link="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}"
+                        data-card-link="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}"
                         role="link"
                         tabindex="0"
                         aria-label="View {{ vendor.public_name }}"
@@ -204,7 +226,7 @@
                                     class="like-act-btn js-like-act-toggle"
                                     data-act-id="{{ vendor_type }}-{{ vendor.id }}"
                                     data-act-name="{{ vendor.public_name }}"
-                                    data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}"
+                                    data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}"
                                     data-act-type="{{ vendor_type|title }}"
                                     data-act-location="{{ vendor.location }}"
                                     data-act-image="{% if vendor.profile_image %}{{ vendor.profile_image.url }}{% endif %}"
@@ -215,11 +237,22 @@
                                     <span data-heart-icon aria-hidden="true">♡</span>
                                 </button>
                             </div>
-                            <p class="vendor-rating" aria-label="5 out of 5 stars">★★★★★</p>
+                            <div class="vendor-rating-price">
+                                <p class="vendor-rating" aria-label="5 out of 5 stars">★★★★★</p>
+                                <span class="badge badge-primary vendor-price-badge">
+                                    {% if vendor.start_price and vendor.start_price > 0 %}
+                                        From £{{ vendor.start_price|floatformat:0 }}
+                                    {% elif vendor.hourly_rate and vendor.hourly_rate > 0 %}
+                                        From £{{ vendor.hourly_rate|floatformat:0 }}
+                                    {% else %}
+                                        Price on request
+                                    {% endif %}
+                                </span>
+                            </div>
                             <p class="vendor-bio">{{ vendor.bio|default:'No description available yet.'|truncatewords:35 }}</p>
 
                             <div style="margin-top: 1.2rem;">
-                                <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type pk=vendor.id %}" class="btn btn-primary w-full">Find Out More</a>
+                                <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}" class="btn btn-primary w-full">Find Out More</a>
                             </div>
                         </div>
                     </div>
