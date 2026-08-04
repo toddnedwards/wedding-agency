@@ -109,6 +109,19 @@ h6 { font-size: 1rem; }
     background-color: var(--border-color);
 }
 
+.btn-hero-gradient {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: #fff;
+}
+
+.btn-hero-gradient:hover,
+.btn-hero-gradient:focus {
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(147, 51, 234, 0.3);
+    filter: brightness(1.05);
+}
+
 .btn-lg {
     padding: 1rem 2rem;
     font-size: 1.125rem;
@@ -345,8 +358,8 @@ nav {
 }
 
 .nav-logo {
-    width: 90px;
-    height: 90px;
+    width: 120px;
+    height: 120px;
     object-fit: contain;
     border-radius: 0.4rem;
 }
@@ -829,8 +842,8 @@ footer {
 }
 
 .footer-logo {
-    width: 72px;
-    height: 72px;
+    width: 90px;
+    height: 90px;
     object-fit: contain;
     border-radius: 0.5rem;
 }

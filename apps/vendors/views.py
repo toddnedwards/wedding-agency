@@ -190,6 +190,19 @@ class VendorProfileUpdateView(UpdateView):
         kwargs['is_profile_edit'] = True
         return kwargs
 
+    def get_initial(self):
+        initial = super().get_initial()
+        vendor = self.get_object()
+        pending_request = (
+            VendorProfileUpdateRequest.objects
+            .filter(vendor=vendor, status=VendorProfileUpdateRequest.STATUS_PENDING)
+            .first()
+        )
+
+        pending_data = pending_request.field_data if pending_request else {}
+        initial['phone'] = pending_data.get('phone') or vendor.phone
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         vendor = self.get_object()

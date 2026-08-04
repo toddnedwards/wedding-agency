@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" role="img" aria-labelledby="t d">
+  <title id="t">Caricaturists banner</title>
+  <desc id="d">Warm gradient with sketch-like circles and strokes.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="50%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#7c2d12"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="500" fill="url(#bg)"/>
+  <circle cx="310" cy="270" r="145" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="8"/>
+  <circle cx="1220" cy="180" r="110" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="7"/>
+  <path d="M120 420c210-115 470-145 680-42 150 74 300 58 480-30" stroke="rgba(255,255,255,0.25)" stroke-width="9" fill="none"/>
+  <text x="620" y="300" fill="rgba(255,255,255,0.2)" font-size="118" font-family="Georgia, serif">✎ ✦</text>
+</svg>

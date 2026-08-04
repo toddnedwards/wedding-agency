@@ -1,18 +1,107 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Blog - Clink Entertainment{% endblock %}
+
+{% block extra_css %}
+<style>
+.blog-post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.blog-post-card {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 1rem;
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+}
+
+.blog-post-content {
+    padding: 1rem;
+}
+
+.blog-post-title {
+    margin-bottom: 0.5rem;
+}
+
+.blog-post-title a {
+    color: var(--text-dark);
+    text-decoration: none;
+}
+
+.blog-post-title a:hover {
+    color: var(--primary-color);
+}
+
+.blog-post-meta {
+    margin-bottom: 0.6rem;
+}
+
+.blog-post-excerpt {
+    margin-bottom: 0.8rem;
+}
+
+.blog-post-media {
+    min-height: 100%;
+    background: #f3f4f6;
+}
+
+.blog-post-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 760px) {
+    .blog-post-card {
+        grid-template-columns: 1fr;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
+    }
+
+    .blog-post-media {
+        order: 1;
+        aspect-ratio: 4 / 3;
+    }
+
+    .blog-post-content {
+        order: 2;
+        padding: 0.95rem;
+    }
+
+    .blog-post-title {
+        font-size: 1.06rem;
+        line-height: 1.3;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <section>
     <div class="container">
         <h1 class="mb-4">Blog</h1>
-        <div class="grid grid-3">
+        <div class="blog-post-list">
             {% for post in posts %}
-                <article class="card">
-                    <h3><a href="{% url 'blog_detail' slug=post.slug %}">{{ post.title }}</a></h3>
-                    <p class="text-muted small">{{ post.created_at|date:"d M Y" }}</p>
-                    <p>{{ post.excerpt|default:post.content|truncatewords:25 }}</p>
-                    <a href="{% url 'blog_detail' slug=post.slug %}" class="btn btn-outline btn-sm">Read More</a>
+                <article class="card blog-post-card">
+                    <div class="blog-post-content">
+                        <h3 class="blog-post-title"><a href="{% url 'blog_detail' slug=post.slug %}">{{ post.title }}</a></h3>
+                        <p class="text-muted small blog-post-meta">{{ post.created_at|date:"d M Y" }}</p>
+                        <p class="blog-post-excerpt">{{ post.excerpt|default:post.content|truncatewords:28 }}</p>
+                        <a href="{% url 'blog_detail' slug=post.slug %}" class="btn btn-outline btn-sm">Read More</a>
+                    </div>
+                    <a class="blog-post-media" href="{% url 'blog_detail' slug=post.slug %}" aria-label="Read {{ post.title }}">
+                        {% if post.featured_image %}
+                            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+                        {% else %}
+                            <img src="{% static 'images/logo.webp' %}" alt="Clink Entertainment blog image">
+                        {% endif %}
+                    </a>
                 </article>
             {% empty %}
                 <p class="text-muted">No published posts yet.</p>

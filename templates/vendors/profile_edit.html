@@ -340,6 +340,9 @@
                         {% if field.name != 'bio' and field.name != 'profile_image' %}
                             <div class="form-group">
                                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% if field.name == 'sample_setlist' %}
+                                    <p class="text-muted small" style="margin-top: 0.25rem; margin-bottom: 0.45rem;">This is the chance to show anything unique you may do to the party, as well as the classics!</p>
+                                {% endif %}
                                 {% if field.name == 'start_price' %}
                                     <div class="price-input-wrap">
                                         <span class="price-prefix" aria-hidden="true">£</span>

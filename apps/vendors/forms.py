@@ -76,12 +76,17 @@ class BaseVendorSignupForm(forms.ModelForm):
         self.is_profile_edit = kwargs.pop('is_profile_edit', False)
         super().__init__(*args, **kwargs)
 
+        # `phone` is a non-model form field, so set it explicitly from the instance.
+        if 'phone' in self.fields and not self.is_bound and getattr(self, 'instance', None) is not None:
+            self.fields['phone'].initial = getattr(self.instance, 'phone', '')
+
         optional_fields = {
             'website',
             'instagram',
             'facebook',
             'sound_system_details',
             'lighting_system_details',
+            'sample_setlist',
         }
 
         for field_name, field in self.fields.items():
@@ -230,6 +235,7 @@ class MusicianSignupForm(BaseVendorSignupForm):
             'experience_years',
             'instruments',
             'genres',
+            'sample_setlist',
             'website',
             'instagram',
             'facebook',
@@ -279,6 +285,11 @@ class MusicianSignupForm(BaseVendorSignupForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
                 'placeholder': 'e.g., Piano, Violin, Guitar',
             }),
+            'sample_setlist': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
+                'placeholder': 'e.g., Mr. Brightside\nValerie\nCan\'t Help Falling in Love',
+                'rows': 6,
+            }),
             'website': forms.URLInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
                 'placeholder': 'Website (Optional)',
@@ -318,6 +329,9 @@ class MusicianSignupForm(BaseVendorSignupForm):
             self.fields['genres'].label = 'Genres'
         if 'can_provide_sound_system' in self.fields:
             self.fields['can_provide_sound_system'].label = 'Can provide sound system?'
+        if 'sample_setlist' in self.fields:
+            self.fields['sample_setlist'].label = 'Sample Setlist'
+            self.fields['sample_setlist'].required = False
         if 'sound_system_details' in self.fields:
             self.fields['sound_system_details'].label = 'If yes, please tell us about your setup'
             self.fields['sound_system_details'].required = False

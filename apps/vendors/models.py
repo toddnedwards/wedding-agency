@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from datetime import timedelta
 
@@ -105,19 +106,31 @@ class VendorProfileUpdateRequest(models.Model):
     def __str__(self):
         return f"Update Request #{self.id} for {self.vendor.business_name} ({self.status})"
 
+    def _get_typed_vendor_instance(self):
+        """Return the concrete subtype instance for this vendor when available."""
+        base_vendor = self.vendor
+        for relation_name in ('musician', 'caricaturist', 'photographer'):
+            try:
+                return getattr(base_vendor, relation_name)
+            except ObjectDoesNotExist:
+                continue
+        return base_vendor
+
     def apply_approved_changes(self, reviewed_by=None):
         """Apply approved data/media to live vendor profile."""
+        live_vendor = self._get_typed_vendor_instance()
+
         for field_name, value in (self.field_data or {}).items():
-            if hasattr(self.vendor, field_name):
-                setattr(self.vendor, field_name, value)
+            if hasattr(live_vendor, field_name):
+                setattr(live_vendor, field_name, value)
 
         if self.pending_profile_image:
-            self.vendor.profile_image = self.pending_profile_image
+            live_vendor.profile_image = self.pending_profile_image
 
-        self.vendor.business_name = self.vendor.public_name
-        self.vendor.hourly_rate = self.vendor.start_price
-        self.vendor.location = f"{self.vendor.home_county}, {self.vendor.home_country}"
-        self.vendor.save()
+        live_vendor.business_name = live_vendor.public_name
+        live_vendor.hourly_rate = live_vendor.start_price
+        live_vendor.location = f"{live_vendor.home_county}, {live_vendor.home_country}"
+        live_vendor.save()
 
         draft_images = list(self.draft_images.all())
         if draft_images:
@@ -139,8 +152,8 @@ class VendorProfileUpdateRequest(models.Model):
                 primary.is_primary = True
                 primary.save(update_fields=['is_primary'])
             if primary is not None:
-                self.vendor.profile_image = primary.image
-                self.vendor.save(update_fields=['profile_image'])
+                live_vendor.profile_image = primary.image
+                live_vendor.save(update_fields=['profile_image'])
 
         draft_videos = list(self.draft_videos.all())
         if draft_videos:
@@ -199,6 +212,7 @@ class Musician(Vendor):
     sound_system_details = models.TextField(blank=True)
     can_provide_lighting_system = models.BooleanField(default=False)
     lighting_system_details = models.TextField(blank=True)
+    sample_setlist = models.TextField(blank=True)
     ensemble_size = models.IntegerField(validators=[MinValueValidator(1)], default=1)
     
     class Meta:

@@ -152,7 +152,57 @@ class VendorListView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['vendor_type'] = self.kwargs.get('vendor_type')
+        vendor_type = self.kwargs.get('vendor_type')
+        style_filter = self.request.GET.get('style', '').strip()
+
+        hero_by_vendor_type = {
+            'musicians': {
+                'title': 'Musicians',
+                'image': 'images/banners/musicians-hero.svg',
+            },
+            'caricaturists': {
+                'title': 'Caricaturists',
+                'image': 'images/banners/caricaturists-hero.png',
+            },
+            'photographers': {
+                'title': 'Photographers',
+                'image': 'images/banners/photographers-hero.png',
+            },
+        }
+
+        musician_style_hero = {
+            'wedding-bands': {
+                'title': 'Wedding Bands',
+                'image': 'images/banners/wedding-bands-hero.png',
+            },
+            'acoustic-solo-duo': {
+                'title': 'Acoustic Solo / Duo',
+                'image': 'images/banners/acoustic-solo-duo-hero.jpg',
+            },
+            'wedding-djs': {
+                'title': 'Wedding DJs',
+                'image': 'images/banners/wedding-djs-hero.jpg',
+            },
+            'saxophone-players': {
+                'title': 'Saxophone Players',
+                'image': 'images/banners/saxophone-players-hero.png',
+            },
+            'pianist': {
+                'title': 'Pianists',
+                'image': 'images/banners/pianist-hero.jpg',
+            },
+        }
+
+        vendor_hero = hero_by_vendor_type.get(vendor_type, {
+            'title': vendor_type.title(),
+            'image': 'images/logo.webp',
+        })
+
+        if vendor_type == 'musicians' and style_filter in musician_style_hero:
+            vendor_hero = musician_style_hero[style_filter]
+
+        context['vendor_type'] = vendor_type
+        context['vendor_hero'] = vendor_hero
         context['search_query'] = self.request.GET.get('q', '').strip()
         context['sort_option'] = self.request.GET.get('sort', 'alphabetical')
         return context
