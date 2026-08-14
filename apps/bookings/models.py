@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+import uuid
 
 class Enquiry(models.Model):
     """Enquiry model for wedding services - vendors must confirm availability"""
@@ -134,6 +135,7 @@ class EnquiryNotification(models.Model):
         ('customer_confirmation', 'Enquiry Confirmation to Customer'),
         ('vendor_accepted', 'Vendor Accepted Enquiry'),
         ('vendor_declined', 'Vendor Declined Enquiry'),
+        ('customer_review_request', 'Post-Event Review Request to Customer'),
     ]
     
     enquiry = models.ForeignKey(Enquiry, on_delete=models.CASCADE, related_name='notifications')
@@ -148,3 +150,43 @@ class EnquiryNotification(models.Model):
     
     def __str__(self):
         return f"{self.get_notification_type_display()} - {self.recipient_email}"
+
+
+class ReviewRequest(models.Model):
+    """Tracks delayed review request emails sent after a booked event."""
+    enquiry = models.OneToOneField(Enquiry, on_delete=models.CASCADE, related_name='review_request')
+    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='review_requests')
+    customer_name = models.CharField(max_length=200)
+    customer_email = models.EmailField()
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    scheduled_send_at = models.DateTimeField()
+    email_sent = models.BooleanField(default=False)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    review_submitted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Review request for enquiry #{self.enquiry_id} ({'sent' if self.email_sent else 'pending'})"
+
+
+class FunnelEvent(models.Model):
+    """Stores lightweight conversion events from public pages."""
+    event = models.CharField(max_length=80)
+    path = models.CharField(max_length=500, blank=True)
+    context = models.CharField(max_length=120, blank=True)
+    vendor_name = models.CharField(max_length=200, blank=True)
+    vendor_type = models.CharField(max_length=50, blank=True)
+    href = models.CharField(max_length=500, blank=True)
+    session_key = models.CharField(max_length=80, blank=True)
+    user = models.ForeignKey('accounts.CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='funnel_events')
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.event} @ {self.created_at:%Y-%m-%d %H:%M}"

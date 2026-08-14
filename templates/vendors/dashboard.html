@@ -2,6 +2,170 @@
 
 {% block title %}Vendor Dashboard - WeddingVendors{% endblock %}
 
+{% block extra_css %}
+<style>
+.availability-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+}
+
+.availability-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: var(--text-color);
+}
+
+.availability-swatch {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 0.2rem;
+    border: 1px solid var(--border-color);
+}
+
+.availability-swatch.available {
+    background: #ffffff;
+}
+
+.availability-swatch.busy {
+    background: #fca5a5;
+    border-color: #ef4444;
+}
+
+.availability-swatch.booked {
+    background: #86efac;
+    border-color: #16a34a;
+}
+
+.calendar-carousel {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.calendar-months-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.calendar-carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.calendar-nav-btn {
+    border: 1px solid var(--border-color);
+    background: #fff;
+    border-radius: 0.5rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.calendar-nav-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.calendar-visible-month {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.calendar-month {
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
+    padding: 0.75rem;
+    background: #fff;
+}
+
+.calendar-month-title {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.25rem;
+}
+
+.calendar-weekdays span {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0.15rem 0;
+}
+
+.calendar-day {
+    border: 1px solid var(--border-color);
+    border-radius: 0.4rem;
+    background: #fff;
+    color: var(--text-color);
+    min-height: 2.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.calendar-day.busy {
+    background: #fecaca;
+    border-color: #ef4444;
+    color: #7f1d1d;
+}
+
+.calendar-day.booked {
+    background: #bbf7d0;
+    border-color: #16a34a;
+    color: #14532d;
+    cursor: not-allowed;
+}
+
+.calendar-day.past,
+.calendar-day:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+    border-color: #e5e7eb;
+    cursor: not-allowed;
+}
+
+.calendar-day.is-loading {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.calendar-day-empty {
+    min-height: 2.2rem;
+}
+
+.calendar-status {
+    margin-top: 0.85rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 680px) {
+    .calendar-months-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-month {
+        max-width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <section>
     <div class="container">
@@ -25,6 +189,34 @@
                 </div>
             {% endif %}
 
+            <div class="card mb-4">
+                <h3 class="mb-2">Availability Calendar</h3>
+                <p class="text-muted small mb-3">Click any future date to mark it busy (red). Click a red date again to clear it. Confirmed agency bookings are shown in green.</p>
+
+                <div class="availability-legend" aria-label="Calendar legend">
+                    <div class="availability-legend-item"><span class="availability-swatch available"></span>Available</div>
+                    <div class="availability-legend-item"><span class="availability-swatch busy"></span>Busy (manual)</div>
+                    <div class="availability-legend-item"><span class="availability-swatch booked"></span>Booked via agency</div>
+                </div>
+
+                <div class="calendar-carousel">
+                    <div class="calendar-carousel-controls" aria-label="Availability month navigation">
+                        <button id="calendarPrevBtn" type="button" class="calendar-nav-btn" aria-label="Show previous 3 months">&#8249;</button>
+                        <p id="calendarVisibleMonth" class="calendar-visible-month" aria-live="polite"></p>
+                        <button id="calendarNextBtn" type="button" class="calendar-nav-btn" aria-label="Show next 3 months">&#8250;</button>
+                    </div>
+
+                    <div
+                        id="vendorAvailabilityCalendar"
+                        class="calendar-months-grid"
+                        data-toggle-url="{% url 'vendors:toggle_unavailable_date' %}"
+                        data-today="{{ today_iso }}"
+                        data-month-count="{{ calendar_month_count }}"
+                    ></div>
+                </div>
+                <p id="vendorCalendarStatus" class="calendar-status" aria-live="polite">Click a date to update availability.</p>
+            </div>
+
             {% if gallery_images %}
                 <div class="card mb-4">
                     <h3 class="mb-2">Your Gallery</h3>
@@ -43,7 +235,7 @@
 
             {% if gallery_videos %}
                 <div class="card mb-4">
-                    <h3 class="mb-2">YouTube Showcase</h3>
+                    <h3 class="mb-2">Main Video</h3>
                     <ul>
                         {% for video in gallery_videos %}
                             <li><a href="{{ video.youtube_url }}" target="_blank" rel="noopener">{{ video.youtube_url }}</a></li>
@@ -126,4 +318,210 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{{ busy_dates_iso|json_script:"vendorBusyDatesData" }}
+{{ booked_dates_iso|json_script:"vendorBookedDatesData" }}
+<script>
+(function () {
+    const calendarRoot = document.getElementById('vendorAvailabilityCalendar');
+    if (!calendarRoot) {
+        return;
+    }
+
+    const statusEl = document.getElementById('vendorCalendarStatus');
+    const prevBtn = document.getElementById('calendarPrevBtn');
+    const nextBtn = document.getElementById('calendarNextBtn');
+    const visibleMonthLabel = document.getElementById('calendarVisibleMonth');
+    const busyDates = new Set(JSON.parse(document.getElementById('vendorBusyDatesData').textContent || '[]'));
+    const bookedDates = new Set(JSON.parse(document.getElementById('vendorBookedDatesData').textContent || '[]'));
+    const toggleUrl = calendarRoot.dataset.toggleUrl;
+    const todayIso = calendarRoot.dataset.today;
+    const monthCount = Math.max(parseInt(calendarRoot.dataset.monthCount || '3', 10), 1);
+    const monthWindowSize = 3;
+    let activeMonthOffset = 0;
+
+    function getCsrfToken() {
+        const name = 'csrftoken=';
+        const parts = document.cookie.split(';');
+        for (const rawPart of parts) {
+            const part = rawPart.trim();
+            if (part.indexOf(name) === 0) {
+                return decodeURIComponent(part.substring(name.length));
+            }
+        }
+        return '';
+    }
+
+    function toIsoDate(year, monthIndex, day) {
+        const month = String(monthIndex + 1).padStart(2, '0');
+        const dayText = String(day).padStart(2, '0');
+        return `${year}-${month}-${dayText}`;
+    }
+
+    function setStatus(message, isError) {
+        if (!statusEl) {
+            return;
+        }
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? '#b91c1c' : 'var(--text-muted)';
+    }
+
+    async function toggleBusyDate(button, isoDate) {
+        if (bookedDates.has(isoDate) || button.disabled) {
+            return;
+        }
+
+        button.classList.add('is-loading');
+        const body = new URLSearchParams({ date: isoDate });
+
+        try {
+            const response = await fetch(toggleUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body,
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+                setStatus(payload.message || 'Could not update this date.', true);
+                return;
+            }
+
+            if (payload.state === 'busy') {
+                busyDates.add(isoDate);
+                button.classList.add('busy');
+                button.classList.remove('available');
+                setStatus(`Marked ${isoDate} as busy.`, false);
+                return;
+            }
+
+            busyDates.delete(isoDate);
+            button.classList.remove('busy');
+            button.classList.add('available');
+            setStatus(`Marked ${isoDate} as available.`, false);
+        } catch (error) {
+            setStatus('Network error while updating availability.', true);
+        } finally {
+            button.classList.remove('is-loading');
+        }
+    }
+
+    function buildMonth(offset) {
+        const today = new Date(`${todayIso}T00:00:00`);
+        const monthDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+        const year = monthDate.getFullYear();
+        const monthIndex = monthDate.getMonth();
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+        const firstWeekday = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
+
+        const monthCard = document.createElement('section');
+        monthCard.className = 'calendar-month';
+
+        const title = document.createElement('h4');
+        title.className = 'calendar-month-title';
+        title.textContent = monthDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+        monthCard.appendChild(title);
+
+        const weekdays = document.createElement('div');
+        weekdays.className = 'calendar-weekdays';
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((dayName) => {
+            const label = document.createElement('span');
+            label.textContent = dayName;
+            weekdays.appendChild(label);
+        });
+        monthCard.appendChild(weekdays);
+
+        const grid = document.createElement('div');
+        grid.className = 'calendar-grid';
+
+        for (let i = 0; i < firstWeekday; i += 1) {
+            const empty = document.createElement('div');
+            empty.className = 'calendar-day-empty';
+            grid.appendChild(empty);
+        }
+
+        for (let day = 1; day <= daysInMonth; day += 1) {
+            const isoDate = toIsoDate(year, monthIndex, day);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'calendar-day';
+            button.textContent = String(day);
+            button.dataset.date = isoDate;
+
+            if (isoDate < todayIso) {
+                button.classList.add('past');
+                button.disabled = true;
+            } else if (bookedDates.has(isoDate)) {
+                button.classList.add('booked');
+                button.disabled = true;
+            } else if (busyDates.has(isoDate)) {
+                button.classList.add('busy');
+            } else {
+                button.classList.add('available');
+            }
+
+            if (!button.disabled) {
+                button.addEventListener('click', function () {
+                    toggleBusyDate(button, isoDate);
+                });
+            }
+
+            grid.appendChild(button);
+        }
+
+        monthCard.appendChild(grid);
+        return monthCard;
+    }
+
+    function monthLabelForOffset(offset) {
+        const today = new Date(`${todayIso}T00:00:00`);
+        const date = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+        return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+    }
+
+    function renderActiveMonths() {
+        calendarRoot.innerHTML = '';
+
+        const lastVisibleOffset = Math.min(activeMonthOffset + monthWindowSize - 1, monthCount - 1);
+        for (let offset = activeMonthOffset; offset <= lastVisibleOffset; offset += 1) {
+            const monthNode = buildMonth(offset);
+            calendarRoot.appendChild(monthNode);
+        }
+
+        const startLabel = monthLabelForOffset(activeMonthOffset);
+        const endLabel = monthLabelForOffset(lastVisibleOffset);
+        visibleMonthLabel.textContent = startLabel === endLabel ? startLabel : `${startLabel} - ${endLabel}`;
+
+        const maxStart = Math.max(monthCount - monthWindowSize, 0);
+        prevBtn.disabled = activeMonthOffset <= 0;
+        nextBtn.disabled = activeMonthOffset >= maxStart;
+    }
+
+    function moveByMonthWindow(direction) {
+        const maxStart = Math.max(monthCount - monthWindowSize, 0);
+        const delta = direction * monthWindowSize;
+        const nextOffset = Math.min(Math.max(activeMonthOffset + delta, 0), maxStart);
+        if (nextOffset === activeMonthOffset) {
+            return;
+        }
+        activeMonthOffset = nextOffset;
+        renderActiveMonths();
+    }
+
+    prevBtn.addEventListener('click', function () {
+        moveByMonthWindow(-1);
+    });
+
+    nextBtn.addEventListener('click', function () {
+        moveByMonthWindow(1);
+    });
+
+    renderActiveMonths();
+})();
+</script>
 {% endblock %}

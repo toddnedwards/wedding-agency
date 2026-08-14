@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.utils import timezone
+from django.utils.html import format_html, format_html_join
 from .models import (
     Musician,
     Caricaturist,
     Photographer,
+    VendorUnavailableDate,
     VendorCertificate,
     VendorPortfolioItem,
     VendorReview,
@@ -14,13 +16,21 @@ from .models import (
     VendorProfileVideoDraft,
 )
 
+
+@admin.register(VendorUnavailableDate)
+class VendorUnavailableDateAdmin(admin.ModelAdmin):
+    list_display = ('vendor', 'date', 'note', 'created_at')
+    list_filter = ('date', 'created_at')
+    search_fields = ('vendor__business_name', 'vendor__act_name', 'vendor__stage_name', 'note')
+    ordering = ('date', 'vendor__business_name')
+
 @admin.register(Musician)
 class MusicianAdmin(admin.ModelAdmin):
-    list_display = ('business_name', 'instruments', 'experience_years', 'hourly_rate', 'is_approved', 'is_active')
+    list_display = ('business_name', 'act_name_is_current', 'instruments', 'experience_years', 'hourly_rate', 'is_approved', 'is_active')
     list_filter = ('is_approved', 'is_active', 'created_at')
     search_fields = ('business_name', 'instruments', 'genres')
     fieldsets = (
-        ('Basic Info', {'fields': ('user', 'business_name', 'bio', 'profile_image')}),
+        ('Basic Info', {'fields': ('user', 'business_name', 'act_name_is_current', 'bio', 'profile_image')}),
         ('Experience', {'fields': ('experience_years', 'instruments', 'genres', 'ensemble_size')}),
         ('Pricing', {'fields': ('hourly_rate',)}),
         ('Location & Contact', {'fields': ('location', 'phone', 'website')}),
@@ -31,11 +41,11 @@ class MusicianAdmin(admin.ModelAdmin):
 
 @admin.register(Caricaturist)
 class CaricaturistAdmin(admin.ModelAdmin):
-    list_display = ('business_name', 'style', 'experience_years', 'hourly_rate', 'is_approved', 'is_active')
+    list_display = ('business_name', 'act_name_is_current', 'style', 'experience_years', 'hourly_rate', 'is_approved', 'is_active')
     list_filter = ('is_approved', 'is_active', 'style', 'created_at')
     search_fields = ('business_name', 'medium')
     fieldsets = (
-        ('Basic Info', {'fields': ('user', 'business_name', 'bio', 'profile_image')}),
+        ('Basic Info', {'fields': ('user', 'business_name', 'act_name_is_current', 'bio', 'profile_image')}),
         ('Experience', {'fields': ('experience_years', 'style', 'medium')}),
         ('Pricing', {'fields': ('hourly_rate',)}),
         ('Location & Contact', {'fields': ('location', 'phone', 'website')}),
@@ -46,11 +56,11 @@ class CaricaturistAdmin(admin.ModelAdmin):
 
 @admin.register(Photographer)
 class PhotographerAdmin(admin.ModelAdmin):
-    list_display = ('business_name', 'specialization', 'experience_years', 'hourly_rate', 'is_approved', 'is_active')
+    list_display = ('business_name', 'act_name_is_current', 'specialization', 'experience_years', 'hourly_rate', 'is_approved', 'is_active')
     list_filter = ('is_approved', 'is_active', 'specialization', 'created_at')
     search_fields = ('business_name', 'specialization')
     fieldsets = (
-        ('Basic Info', {'fields': ('user', 'business_name', 'bio', 'profile_image')}),
+        ('Basic Info', {'fields': ('user', 'business_name', 'act_name_is_current', 'bio', 'profile_image')}),
         ('Experience', {'fields': ('experience_years', 'specialization', 'editing_style')}),
         ('Pricing', {'fields': ('hourly_rate',)}),
         ('Location & Contact', {'fields': ('location', 'phone', 'website')}),
@@ -74,10 +84,29 @@ class VendorPortfolioItemAdmin(admin.ModelAdmin):
 
 @admin.register(VendorReview)
 class VendorReviewAdmin(admin.ModelAdmin):
-    list_display = ('vendor', 'customer', 'rating', 'created_at')
-    list_filter = ('rating', 'created_at')
-    search_fields = ('vendor__business_name', 'customer__email', 'title')
-    readonly_fields = ('created_at',)
+    list_display = ('vendor', 'customer_name', 'customer_email', 'rating', 'is_approved', 'created_at', 'approved_at')
+    list_filter = ('is_approved', 'rating', 'created_at')
+    search_fields = ('vendor__business_name', 'customer__email', 'customer_name', 'customer_email', 'title')
+    readonly_fields = ('created_at', 'approved_at')
+    actions = ['approve_reviews']
+
+    def save_model(self, request, obj, form, change):
+        if obj.is_approved and obj.approved_at is None:
+            obj.approved_at = timezone.now()
+            obj.approved_by = request.user
+        elif not obj.is_approved:
+            obj.approved_at = None
+            obj.approved_by = None
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description='Approve selected reviews')
+    def approve_reviews(self, request, queryset):
+        updated = queryset.filter(is_approved=False).update(
+            is_approved=True,
+            approved_at=timezone.now(),
+            approved_by=request.user,
+        )
+        self.message_user(request, f'Approved {updated} review(s).')
 
 
 @admin.register(VendorMediaImage)
@@ -131,8 +160,32 @@ class VendorProfileUpdateRequestAdmin(admin.ModelAdmin):
         data = obj.field_data or {}
         if not data:
             return '(No field changes submitted)'
-        lines = [f"{key}: {value}" for key, value in data.items()]
-        return '\n'.join(lines)
+
+        def format_value(value):
+            if isinstance(value, (list, tuple)):
+                return ', '.join(str(item) for item in value) if value else '(empty)'
+            if isinstance(value, dict):
+                return '; '.join(f'{k}: {v}' for k, v in value.items()) if value else '(empty)'
+            if value is None:
+                return '(none)'
+            return str(value)
+
+        cards = [
+            (
+                key.replace('_', ' ').title(),
+                format_value(value),
+            )
+            for key, value in data.items()
+        ]
+
+        return format_html_join(
+            '',
+            '<div class="vendor-update-field-card">'
+            '<div class="vendor-update-field-label">{}</div>'
+            '<div class="vendor-update-field-value">{}</div>'
+            '</div>',
+            cards,
+        )
 
     def save_model(self, request, obj, form, change):
         previous_status = None

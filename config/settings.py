@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     'rest_framework',
     'corsheaders',
     'crispy_forms',
@@ -59,6 +60,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'admin_notifications': 'apps.core.templatetags.admin_notifications',
+                'pricing': 'apps.core.templatetags.pricing',
             },
         },
     },
@@ -128,9 +130,10 @@ CORS_ALLOWED_ORIGINS = [
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.hostinger.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='info@thebestentertainment.com')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='info@thebestentertainment.co.uk')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='info@thebestentertainment.com')
-ADMIN_EMAIL = config('ADMIN_EMAIL', default='info@thebestentertainment.com')
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='info@thebestentertainment.co.uk')
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='info@thebestentertainment.co.uk')
 EMAIL_FAIL_SILENTLY = config('EMAIL_FAIL_SILENTLY', default=False, cast=bool)

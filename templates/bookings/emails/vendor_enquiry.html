@@ -3,29 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <title>New Enquiry</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f7fb; margin: 0; padding: 24px; color: #1f2937; }
+        .container { max-width: 640px; margin: 0 auto; }
+        .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px; }
+        h1 { font-size: 24px; margin: 0 0 12px; color: #111827; }
+        h2 { font-size: 18px; margin: 24px 0 12px; color: #111827; }
+        p { margin: 0 0 12px; line-height: 1.6; }
+        .label { font-weight: 700; color: #374151; }
+        .muted { color: #6b7280; }
+        .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+        a { color: #2563eb; text-decoration: none; }
+        ul { padding-left: 20px; margin: 0 0 12px; }
+    </style>
 </head>
 <body>
-    <h2>New enquiry for {{ vendor_name }}</h2>
-    {% if selected_acts %}
-        <p><strong>Customer also selected these acts:</strong></p>
-        <ul>
-            {% for act in selected_acts %}
-                <li>
-                    <strong>{{ act.name }}</strong>
-                    {% if act.type_label %}- {{ act.type_label }}{% endif %}
-                    {% if act.location %} - {{ act.location }}{% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    <p><strong>Customer:</strong> {{ customer_name }}</p>
-    <p><strong>Email:</strong> {{ customer_email }}</p>
-    <p><strong>Phone:</strong> {{ customer_phone }}</p>
-    <p><strong>Event:</strong> {{ event_type }} on {{ event_date }} at {{ event_time }}</p>
-    <p><strong>Location:</strong> {{ event_location }}</p>
-    <p><strong>Details:</strong><br>{{ details }}</p>
-    {% if special_requirements %}
-        <p><strong>Special requirements:</strong><br>{{ special_requirements }}</p>
-    {% endif %}
+    <div class="container">
+        <div class="card">
+            <p>Hi {{ vendor_name }},</p>
+            <p>Hope you're well. Someone has enquired about booking {{ customer_name }}! Are you available for this enquiry please?</p>
+
+            <h2>Enquiry Details</h2>
+            <p><span class="label">Date:</span> {{ event_date|date:"d/m/Y" }}</p>
+            <p><span class="label">Location:</span> {{ event_location }}</p>
+            <p><span class="label">Venue Details:</span> {% if venue_name %}{{ venue_name }}{% else %}Not provided{% endif %}{% if county %} · {{ county }}{% endif %}</p>
+            <p><span class="label">Event:</span> {{ event_type }}</p>
+            <p><span class="label">Arrival Time:</span> {{ event_time|time:"H:i" }}</p>
+            <p><span class="label">Finish:</span> Not provided</p>
+            <p><span class="label">List Price:</span> Please confirm</p>
+            <p><span class="label">Comments:</span><br>{{ details|default:"No additional comments provided." }}</p>
+
+            {% if special_requirements %}
+                <p><span class="label">Special Requirements:</span><br>{{ special_requirements }}</p>
+            {% endif %}
+
+            {% if selected_acts %}
+                <p><span class="label">Customer also selected these acts:</span></p>
+                <ul>
+                    {% for act in selected_acts %}
+                        <li><strong>{{ act.name }}</strong>{% if act.type_label %} - {{ act.type_label }}{% endif %}{% if act.location %} - {{ act.location }}{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <p>Please confirm your availability and price as soon as possible. We aim to send out confirmation of price and availability within 24 hours. The quicker you get back to us, the higher the chance we have of securing you the booking.</p>
+            <p>If altering your list price, please let us know the reason so we can explain to the client if they ask.</p>
+            <p>Thank you!</p>
+
+            <div class="footer">
+                <p>Kind regards,<br>The Best Entertainment Team</p>
+                <p>THE BEST ENTERTAINMENT<br>WEB <a href="https://www.thebestentertainment.com">www.thebestentertainment.com</a><br>EMAIL <a href="mailto:enquiries@thebestentertainment.com">enquiries@thebestentertainment.com</a><br>PHONE 01270 501 164</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

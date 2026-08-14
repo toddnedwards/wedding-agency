@@ -33,6 +33,21 @@
     margin-top: auto;
     padding-top: 1rem;
 }
+
+.trust-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.75rem;
+}
+
+.trust-pill {
+    border: 1px solid var(--border-color);
+    border-radius: 0.6rem;
+    padding: 0.8rem;
+    background: #fff;
+    font-weight: 600;
+    text-align: center;
+}
 </style>
 {% endblock %}
 
@@ -45,6 +60,17 @@
         <div class="hero-buttons">
             <a href="#vendors" class="btn btn-light btn-lg">Browse Our Acts!</a>
             <a href="{% url 'vibe_quiz' %}" class="btn btn-light btn-lg">Take The Vibe Quiz!</a>
+        </div>
+    </div>
+</section>
+
+<section style="padding-top: 0;">
+    <div class="container">
+        <div class="trust-strip">
+            <div class="trust-pill">Verified acts only</div>
+            <div class="trust-pill">Fast enquiry routing</div>
+            <div class="trust-pill">UK-wide entertainment coverage</div>
+            <div class="trust-pill">Real customer reviews</div>
         </div>
     </div>
 </section>
@@ -131,10 +157,36 @@
 <section>
     <div class="container">
         <div class="card" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; text-align: center;">
-            <h2 style="color: white;">Ready to Find Your Vendors?</h2>
-            <p style="margin: 1rem 0; opacity: 0.95;">Start browsing our directory or post your event details</p>
-            <div style="margin-top: 1.5rem;">
-                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}" class="btn btn-light btn-lg">Start Browsing</a>
+            <h2 style="color: white;">Ready To Check Availability?</h2>
+            <p style="margin: 1rem 0; opacity: 0.95;">Tell us your date, location and vibe, then send your enquiry to your shortlisted acts.</p>
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{% url 'vibe_quiz' %}" class="btn btn-light btn-lg">Get Matched First</a>
+                <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}" class="btn btn-light btn-lg">Browse Acts</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="card">
+            <div class="section-title" style="margin-bottom: 1.25rem;">
+                <h2>Booking Confidence</h2>
+                <p>What you can expect when you book through us</p>
+            </div>
+            <div class="grid grid-3">
+                <div>
+                    <h4 style="margin-bottom: 0.45rem;" class="text-center">Clear Pricing</h4>
+                    <p class="text-muted text-center" style="margin: 0;">See transparent starting prices before sending enquiries.</p>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 0.45rem;" class="text-center">Trusted Profiles</h4>
+                    <p class="text-muted text-center" style="margin: 0;">Each act profile includes media, details and customer review history.</p>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 0.45rem;" class="text-center">Managed Process</h4>
+                    <p class="text-muted text-center" style="margin: 0;">Track enquiries in one place and compare responses with confidence.</p>
+                </div>
             </div>
         </div>
     </div>

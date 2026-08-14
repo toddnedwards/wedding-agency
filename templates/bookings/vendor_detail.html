@@ -1,6 +1,15 @@
 {% extends 'base.html' %}
+{% load pricing %}
 
-{% block title %}{{ vendor.public_name }} - WeddingVendors{% endblock %}
+{% block title %}{{ vendor.public_name }} | Wedding Entertainment in {{ vendor.location }} | The Best Entertainment{% endblock %}
+{% block meta_description %}Book {{ vendor.public_name }} for your wedding or event in {{ vendor.location }}. {{ vendor.bio|truncatewords:22 }}{% endblock %}
+{% block og_type %}profile{% endblock %}
+{% block og_title %}{{ vendor.public_name }} | Wedding Entertainment in {{ vendor.location }}{% endblock %}
+{% block og_description %}Book {{ vendor.public_name }} for your wedding or event in {{ vendor.location }}.{% endblock %}
+{% block og_image %}{% if main_gallery_image %}{{ request.scheme }}://{{ request.get_host }}{{ main_gallery_image.image.url }}{% elif vendor.profile_image %}{{ request.scheme }}://{{ request.get_host }}{{ vendor.profile_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endif %}{% endblock %}
+{% block twitter_title %}{{ vendor.public_name }} | Wedding Entertainment in {{ vendor.location }}{% endblock %}
+{% block twitter_description %}Book {{ vendor.public_name }} for your wedding or event in {{ vendor.location }}.{% endblock %}
+{% block twitter_image %}{% if main_gallery_image %}{{ request.scheme }}://{{ request.get_host }}{{ main_gallery_image.image.url }}{% elif vendor.profile_image %}{{ request.scheme }}://{{ request.get_host }}{{ vendor.profile_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endif %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -174,6 +183,81 @@
     color: #f59e0b;
     font-size: 1rem;
     margin-bottom: 0.45rem;
+    letter-spacing: 0.08em;
+}
+
+.review-card {
+    flex: 0 0 min(100%, 320px);
+    scroll-snap-align: start;
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.85rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-height: 220px;
+    text-align: center;
+}
+
+.review-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.review-card-title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+}
+
+.review-card-client {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #111827;
+    text-align: center;
+}
+
+.review-card-event {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #6b7280;
+    text-align: center;
+}
+
+.review-card-body {
+    margin: 0;
+    color: #374151;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: center;
+}
+
+.reviews-track {
+    display: flex;
+    gap: 0.9rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: 0.35rem;
+    scrollbar-width: thin;
+}
+
+.reviews-track::-webkit-scrollbar {
+    height: 7px;
+}
+
+.reviews-track::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 999px;
 }
 
 .reviews-nav {
@@ -211,11 +295,41 @@
     background: var(--primary-color);
 }
 
+.reviews-cta {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.85rem;
+}
+
+.more-reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
 .price-highlight {
     font-size: 1.05rem;
     font-weight: 700;
     letter-spacing: 0.01em;
     padding: 0.45rem 0.75rem;
+}
+
+.booking-confidence {
+    border: 1px solid var(--border-color);
+    border-radius: 0.65rem;
+    background: #f8fafc;
+    padding: 0.85rem;
+    margin-top: 1rem;
+}
+
+.booking-confidence ul {
+    margin: 0.35rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.booking-confidence li {
+    margin-bottom: 0.3rem;
+    font-size: 0.92rem;
 }
 
 .mobile-price-box {
@@ -563,13 +677,13 @@
                             >
                                 <span data-heart-icon aria-hidden="true">♡</span>
                             </button>
-                            <a href="#enquiry-form-section" class="btn btn-primary">Enquire Now</a>
+                            <a href="#enquiry-form-section" class="btn btn-primary" data-track-event="check_availability_click" data-track-context="vendor_detail" data-track-vendor="{{ vendor.public_name|escape }}" data-track-vendor-type="{{ vendor_type }}">Check Availability</a>
                         </div>
                     </div>
                     
                     <div class="flex-between mb-3 desktop-only" style="margin-top: 1rem;">
                         <span></span>
-                        <span class="badge badge-primary price-highlight">From £{{ vendor.hourly_rate }}</span>
+                        <span class="badge badge-primary price-highlight">From £{{ vendor.hourly_rate|agency_price }}</span>
                     </div>
 
                     {% if gallery_video_embeds %}
@@ -616,7 +730,7 @@
                             {% endif %}
 
                             <div class="mobile-price-box">
-                                <span class="badge badge-primary">From £{{ vendor.hourly_rate }}</span>
+                                <span class="badge badge-primary">From £{{ vendor.hourly_rate|agency_price }}</span>
                             </div>
                         </div>
                     {% else %}
@@ -644,7 +758,7 @@
                         {% endif %}
 
                         <div class="mobile-only mobile-price-box mb-3">
-                            <span class="badge badge-primary">From £{{ vendor.hourly_rate }}</span>
+                            <span class="badge badge-primary">From £{{ vendor.hourly_rate|agency_price }}</span>
                         </div>
                     {% endif %}
 
@@ -661,13 +775,21 @@
                     {% endif %}
 
                     <div class="mt-3 mb-3 vendor-about-block">
-                        <h3 class="vendor-about-title">About</h3>
+                        <h3 class="vendor-about-title mt-3 mb-3">About</h3>
                         <p>{{ vendor.bio }}</p>
-                        <p><strong>📍 Location:</strong> {{ vendor.location }}</p>
+                        <p class="mt-3 mb-3"><strong>📍 Location:</strong> {{ vendor.location }}</p>
+                    </div>
+
+                    <div class="booking-confidence">
+                        <strong>Booking confidence</strong>
+                        <ul>
+                            <li>Send your event details directly from this page.</li>
+                            <li>Compare replies and availability before confirming.</li>
+                        </ul>
                     </div>
                     
                     {% if vendor_type == 'musicians' %}
-                        <div class="mb-2">
+                        <div class="mb-2 mt-2">
                             <strong>🎵 Genres:</strong> {{ vendor.genres }}
                         </div>
                         <div class="mb-2">
@@ -727,23 +849,37 @@
                 </div>
 
                 {% if reviews %}
-                    <div class="card mb-4 reviews-carousel vendor-reviews-card" id="reviewsCarousel">
-                        <h3 class="mb-2">Reviews</h3>
+                    <div class="card mb-4 reviews-carousel vendor-reviews-card text-center" id="reviewsCarousel">
+                        <div class="vendor-header" style="margin-bottom: 0.75rem; align-items: center;">
+                            <h3 style="margin: 0;">Reviews ({{ display_review_count }})</h3>
+                            <span class="badge badge-primary">Customer feedback</span>
+                        </div>
 
-                        {% for review in reviews %}
-                            <div class="review-slide {% if forloop.first %}active{% endif %}">
-                                <div class="review-stars">
-                                    {% for _ in '12345' %}
-                                        {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
-                                    {% endfor %}
-                                </div>
-                                <p><strong>{{ review.title }}</strong></p>
-                                <p class="text-muted">{{ review.comment }}</p>
-                                <p class="text-muted small">{{ review.customer.first_name|default:review.customer.email }} • {{ review.created_at|date:"d M Y" }}</p>
-                            </div>
-                        {% endfor %}
+                        <div class="reviews-track" id="reviewsTrack">
+                            {% for review in reviews %}
+                                <article class="review-card">
+                                    <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+                                        {% for _ in '12345' %}
+                                            {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="review-card-header">
+                                        <p class="review-card-client">
+                                            {{ review.customer_name|default:'Customer' }}
+                                        </p>
+                                    </div>
+                                    <p class="review-card-event">
+                                        {{ review.event_type|default:'Event' }}
+                                    </p>
+                                    {% if review.title %}
+                                        <p class="review-card-title">{{ review.title }}</p>
+                                    {% endif %}
+                                    <p class="review-card-body">“{{ review.comment }}”</p>
+                                </article>
+                            {% endfor %}
+                        </div>
 
-                        {% if reviews|length > 1 %}
+                        {% if more_reviews %}
                             <div class="reviews-nav">
                                 <button type="button" class="reviews-btn" id="reviewsPrev" aria-label="Previous review">‹</button>
                                 <div class="review-dots" id="reviewsDots">
@@ -753,6 +889,9 @@
                                 </div>
                                 <button type="button" class="reviews-btn" id="reviewsNext" aria-label="Next review">›</button>
                             </div>
+                            <div class="reviews-cta">
+                                <a href="#more-reviews" class="btn btn-outline">More Reviews</a>
+                            </div>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -761,7 +900,7 @@
                 <div class="card vendor-enquiry-card" id="enquiry-form-section">
                     <h3>Send an Enquiry</h3>
                     
-                    <form method="post" action="{% url 'bookings:create_enquiry' vendor_type=vendor_type vendor_id=vendor.id %}" class="mt-3">
+                    <form method="post" action="{% url 'bookings:create_enquiry' vendor_type=vendor_type vendor_id=vendor.id %}" class="mt-3" data-track-submit="enquiry_submit" data-track-context="vendor_detail" data-track-vendor="{{ vendor.public_name|escape }}" data-track-vendor-type="{{ vendor_type }}">
                         {% csrf_token %}
                         
                         {% for field in enquiry_form %}
@@ -777,8 +916,39 @@
                         <button type="submit" class="btn btn-primary w-full btn-lg" style="margin-top: 1rem;">Send Enquiry</button>
                     </form>
                 </div>
+
             </div>
         </div>
+
+        {% if more_reviews %}
+            <div class="card mb-4" id="more-reviews" style="margin-top: 1.5rem;">
+                <h3 class="mb-3">More Reviews</h3>
+                <div class="more-reviews-grid">
+                    {% for review in more_reviews %}
+                        <article class="review-card" style="min-height: 0;">
+                            <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+                                {% for _ in '12345' %}
+                                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="review-card-client">
+                                {{ review.customer_name|default:'Customer' }}
+                            </p>
+                            <p class="review-card-event">
+                                {{ review.event_type|default:'Event' }}
+                            </p>
+                            {% if review.title %}
+                                <p class="review-card-title">{{ review.title }}</p>
+                            {% endif %}
+                            <p class="review-card-body">“{{ review.comment }}”</p>
+                        </article>
+                    {% endfor %}
+                </div>
+                <div class="reviews-cta" style="margin-top: 1rem;">
+                    <a href="#enquiry-form-section" class="btn btn-primary">Enquire Now</a>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
@@ -891,18 +1061,32 @@
         setMainImage(currentIndex);
     }
 
-    const reviewSlides = Array.from(document.querySelectorAll('#reviewsCarousel .review-slide'));
+    const reviewTrack = document.getElementById('reviewsTrack');
     const reviewDots = Array.from(document.querySelectorAll('#reviewsDots .review-dot'));
     const prevReviewBtn = document.getElementById('reviewsPrev');
     const nextReviewBtn = document.getElementById('reviewsNext');
 
-    if (reviewSlides.length > 1) {
+    if (reviewTrack && reviewDots.length) {
+        const cards = Array.from(reviewTrack.querySelectorAll('.review-card'));
         let reviewIndex = 0;
 
+        const getCardScrollAmount = () => {
+            const firstCard = cards[0];
+            if (!firstCard) return 0;
+            const styles = window.getComputedStyle(reviewTrack);
+            const gap = Number.parseFloat(styles.columnGap || styles.gap || '0');
+            return firstCard.getBoundingClientRect().width + gap;
+        };
+
         const renderReview = (index) => {
-            reviewIndex = (index + reviewSlides.length) % reviewSlides.length;
-            reviewSlides.forEach((slide, i) => slide.classList.toggle('active', i === reviewIndex));
+            reviewIndex = (index + cards.length) % cards.length;
             reviewDots.forEach((dot, i) => dot.classList.toggle('active', i === reviewIndex));
+            if (reviewTrack) {
+                reviewTrack.scrollTo({
+                    left: reviewIndex * getCardScrollAmount(),
+                    behavior: 'smooth'
+                });
+            }
         };
 
         if (prevReviewBtn) {

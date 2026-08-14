@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 
 {% block title %}{{ post.title }} - Clink Entertainment{% endblock %}
+{% block meta_description %}{{ post.seo_description|default:post.excerpt|default:post.content|truncatewords:24 }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ post.seo_title|default:post.title }} | The Best Entertainment{% endblock %}
+{% block og_description %}{{ post.seo_description|default:post.excerpt|default:post.content|truncatewords:24 }}{% endblock %}
+{% block og_image %}{% if post.featured_image %}{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endif %}{% endblock %}
+{% block twitter_title %}{{ post.seo_title|default:post.title }} | The Best Entertainment{% endblock %}
+{% block twitter_description %}{{ post.seo_description|default:post.excerpt|default:post.content|truncatewords:24 }}{% endblock %}
+{% block twitter_image %}{% if post.featured_image %}{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endif %}{% endblock %}
 
 {% block content %}
 <section>

@@ -4,13 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Wedding Agency - Find Your Perfect Vendors{% endblock %}</title>
     {% load static %}
+    <title>{% block title %}Wedding Entertainment &amp; Event Acts | The Best Entertainment{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Discover trusted wedding bands, musicians, photographers and event acts across the UK. Compare profiles and enquire for your date.{% endblock %}">
+    <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="The Best Entertainment">
+    <meta property="og:title" content="{% block og_title %}{% block title_for_social %}Wedding Entertainment &amp; Event Acts | The Best Entertainment{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Discover trusted wedding bands, musicians, photographers and event acts across the UK.{% endblock %}">
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Wedding Entertainment &amp; Event Acts | The Best Entertainment{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Discover trusted wedding bands, musicians, photographers and event acts across the UK.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}{% endblock %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+    {% block structured_data %}{% endblock %}
 </head>
 
-<body>
+<body data-funnel-event-url="{% url 'bookings:capture_funnel_event' %}">
     <!-- Navigation -->
     <nav>
         <div class="container">
@@ -140,8 +154,7 @@
                         <li><a href="{% url 'home' %}">Browse Vendors</a></li>
                         <li><a href="{% url 'blog_list' %}">Blog</a></li>
                         <li><a href="#vendors">Explore Categories</a></li>
-                        <li><a href="#">How It Works</a></li>
-                        <li><a href="#">FAQ</a></li>
+                        <li><a href="{% url 'faq' %}">FAQ</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -149,16 +162,14 @@
                     <ul>
                         <li><a href="{% url 'accounts:vendor_signup_choice' %}">Register as Vendor</a></li>
                         <li><a href="{% url 'accounts:vendor_login' %}">Vendor Login</a></li>
-                        <li><a href="#">Pricing</a></li>
                         {% if user.is_authenticated and user.is_vendor %}
                         <li><a href="#">Vendor Dashboard</a></li>
                         {% endif %}
-                        <li><a href="#">Support</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: <a href="mailto:info@thebestentertainment.com" target="_blank">info@thebestentertainment.com</a></p>
+                    <p>Email: <a href="mailto:info@thebestentertainment.co.uk" target="_blank">info@thebestentertainment.co.uk</a></p>
                     <p>Phone: +44 (0) 123 456 7890</p>
                     <p>Follow us on social media</p>
                     <div class="footer-social-links" aria-label="Social media links">

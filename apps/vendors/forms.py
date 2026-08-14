@@ -1,5 +1,7 @@
 from django import forms
+from django.utils import timezone
 from apps.vendors.models import Musician, Caricaturist, Photographer
+from apps.vendors.models import VendorUnavailableDate
 from apps.accounts.models import CustomUser
 
 
@@ -45,6 +47,22 @@ GENRE_CHOICES = [
 ]
 
 
+class VendorUnavailableDateForm(forms.ModelForm):
+    class Meta:
+        model = VendorUnavailableDate
+        fields = ['date', 'note']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'note': forms.TextInput(attrs={'placeholder': 'Optional note (private)'}),
+        }
+
+    def clean_date(self):
+        date_value = self.cleaned_data['date']
+        if date_value < timezone.localdate():
+            raise forms.ValidationError('Please choose today or a future date.')
+        return date_value
+
+
 class BaseVendorSignupForm(forms.ModelForm):
     """Shared fields for all vendor signup forms"""
     LOCKED_PROFILE_FIELDS = {
@@ -54,7 +72,7 @@ class BaseVendorSignupForm(forms.ModelForm):
         'password',
         'password_confirm',
         'act_name',
-        'stage_name',
+        'act_name_is_current',
         'act_types',
         'number_of_members',
         'home_county',
@@ -89,8 +107,22 @@ class BaseVendorSignupForm(forms.ModelForm):
             'sample_setlist',
         }
 
+        testimonial_fields = {
+            'testimonial_1_name',
+            'testimonial_1_event_type',
+            'testimonial_1_text',
+            'testimonial_2_name',
+            'testimonial_2_event_type',
+            'testimonial_2_text',
+            'testimonial_3_name',
+            'testimonial_3_event_type',
+            'testimonial_3_text',
+        }
+
         for field_name, field in self.fields.items():
-            if field_name in optional_fields or isinstance(field, forms.BooleanField):
+            if field_name in testimonial_fields:
+                field.required = not self.is_profile_edit
+            elif field_name in optional_fields or isinstance(field, forms.BooleanField):
                 field.required = False
             else:
                 field.required = True
@@ -100,12 +132,35 @@ class BaseVendorSignupForm(forms.ModelForm):
         self.fields['email'].label = 'Email Address'
         self.fields['phone'].label = 'Phone Number'
         self.fields['act_name'].label = 'Name of Act'
-        self.fields['stage_name'].label = 'Stage / Professional Name (this is the name that will appear on our website)'
+        self.fields['act_name'].help_text = (
+            'Please choose a name that is different to your current advertised name. '
+            'This name needs to be unique to the agency. If you are unsure, tick the box below and contact us and we can help you choose a name also.'
+        )
+        self.fields['act_name_is_current'].label = 'this is our current act name'
         self.fields['act_types'].label = 'Act Type'
         self.fields['number_of_members'].label = 'Number of Members'
         self.fields['home_county'].label = 'Act Home County'
         self.fields['home_country'].label = 'Act Home Country'
         self.fields['start_price'].label = 'Start Price'
+        self.fields['start_price'].help_text = (
+            'This is your base rate for your local area. On the next page, you can set rates for surrounding counties to help us send you faster, area-specific gig enquiries.'
+        )
+        self.fields['testimonial_1_name'].label = 'Client Name'
+        self.fields['testimonial_1_event_type'].label = 'Event Type'
+        self.fields['testimonial_1_text'].label = 'Testimonial'
+        self.fields['testimonial_2_name'].label = 'Client Name'
+        self.fields['testimonial_2_event_type'].label = 'Event Type'
+        self.fields['testimonial_2_text'].label = 'Testimonial'
+        self.fields['testimonial_3_name'].label = 'Client Name'
+        self.fields['testimonial_3_event_type'].label = 'Event Type'
+        self.fields['testimonial_3_text'].label = 'Testimonial'
+        if 'profile_image' in self.fields:
+            self.fields['profile_image'].label = 'Main Profile Image'
+            self.fields['profile_image'].help_text = (
+                'Upload a high-resolution horizontal photo of your band/act '
+                '(landscape orientation, clear and well-lit, minimum 1600px wide).'
+            )
+            self.fields['profile_image'].widget.attrs.update({'accept': 'image/*'})
         if not self.is_bound:
             self.fields['start_price'].initial = 0
 
@@ -116,6 +171,8 @@ class BaseVendorSignupForm(forms.ModelForm):
 
             if 'profile_image' in self.fields:
                 self.fields['profile_image'].required = False
+            if 'start_price' in self.fields:
+                self.fields['start_price'].help_text = ''
 
         if 'bio' in self.fields:
             self.fields['bio'].max_length = 250
@@ -129,11 +186,19 @@ class BaseVendorSignupForm(forms.ModelForm):
             'password',
             'password_confirm',
             'act_name',
-            'stage_name',
             'number_of_members',
             'home_county',
             'home_country',
             'start_price',
+            'website',
+            'instagram',
+            'facebook',
+            'testimonial_1_name',
+            'testimonial_1_event_type',
+            'testimonial_2_name',
+            'testimonial_2_event_type',
+            'testimonial_3_name',
+            'testimonial_3_event_type',
         ]
         for field_name in text_fields:
             if field_name in self.fields:
@@ -151,8 +216,8 @@ class BaseVendorSignupForm(forms.ModelForm):
             self.fields['phone'].widget.attrs.update({'placeholder': 'Phone Number', 'type': 'tel'})
         if 'act_name' in self.fields:
             self.fields['act_name'].widget.attrs.update({'placeholder': 'Name of Act'})
-        if 'stage_name' in self.fields:
-            self.fields['stage_name'].widget.attrs.update({'placeholder': 'Stage / Professional Name'})
+        if 'act_name_is_current' in self.fields:
+            self.fields['act_name_is_current'].widget.attrs.update({'class': 'h-4 w-4 text-purple-600'})
         if 'number_of_members' in self.fields:
             self.fields['number_of_members'].widget.attrs.update({'placeholder': 'Number of Members', 'min': 1})
         if 'home_county' in self.fields:
@@ -161,6 +226,37 @@ class BaseVendorSignupForm(forms.ModelForm):
             self.fields['home_country'].widget.attrs.update({'placeholder': 'Act Home Country'})
         if 'start_price' in self.fields:
             self.fields['start_price'].widget.attrs.update({'placeholder': '0', 'min': 0})
+        if 'website' in self.fields:
+            self.fields['website'].widget.attrs.update({'placeholder': 'Website (Optional)'})
+        if 'instagram' in self.fields:
+            self.fields['instagram'].widget.attrs.update({'placeholder': 'Instagram (Optional)'})
+        if 'facebook' in self.fields:
+            self.fields['facebook'].widget.attrs.update({'placeholder': 'Facebook (Optional)'})
+        if 'testimonial_1_name' in self.fields:
+            self.fields['testimonial_1_name'].widget.attrs.update({'placeholder': 'Client name'})
+        if 'testimonial_1_event_type' in self.fields:
+            self.fields['testimonial_1_event_type'].widget.attrs.update({'placeholder': 'Event type (e.g., wedding reception)'})
+        if 'testimonial_2_name' in self.fields:
+            self.fields['testimonial_2_name'].widget.attrs.update({'placeholder': 'Client name'})
+        if 'testimonial_2_event_type' in self.fields:
+            self.fields['testimonial_2_event_type'].widget.attrs.update({'placeholder': 'Event type (e.g., engagement party)'})
+        if 'testimonial_3_name' in self.fields:
+            self.fields['testimonial_3_name'].widget.attrs.update({'placeholder': 'Client name'})
+        if 'testimonial_3_event_type' in self.fields:
+            self.fields['testimonial_3_event_type'].widget.attrs.update({'placeholder': 'Event type (e.g., destination wedding)'})
+
+        testimonial_text_fields = [
+            'testimonial_1_text',
+            'testimonial_2_text',
+            'testimonial_3_text',
+        ]
+        for field_name in testimonial_text_fields:
+            if field_name in self.fields:
+                self.fields[field_name].widget.attrs.update({
+                    'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
+                    'rows': 4,
+                    'placeholder': 'Share what the client said about your work',
+                })
 
     def clean(self):
         cleaned_data = super().clean()
@@ -224,7 +320,7 @@ class MusicianSignupForm(BaseVendorSignupForm):
         model = Musician
         fields = [
             'act_name',
-            'stage_name',
+            'act_name_is_current',
             'act_types',
             'number_of_members',
             'home_county',
@@ -239,6 +335,15 @@ class MusicianSignupForm(BaseVendorSignupForm):
             'website',
             'instagram',
             'facebook',
+            'testimonial_1_name',
+            'testimonial_1_event_type',
+            'testimonial_1_text',
+            'testimonial_2_name',
+            'testimonial_2_event_type',
+            'testimonial_2_text',
+            'testimonial_3_name',
+            'testimonial_3_event_type',
+            'testimonial_3_text',
             'can_provide_sound_system',
             'sound_system_details',
             'can_provide_lighting_system',
@@ -248,10 +353,6 @@ class MusicianSignupForm(BaseVendorSignupForm):
             'act_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
                 'placeholder': 'Name of Act',
-            }),
-            'stage_name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
-                'placeholder': 'Stage Name / Act Name',
             }),
             'number_of_members': forms.NumberInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
@@ -371,7 +472,7 @@ class CaricaturistSignupForm(BaseVendorSignupForm):
         model = Caricaturist
         fields = [
             'act_name',
-            'stage_name',
+            'act_name_is_current',
             'act_types',
             'number_of_members',
             'home_county',
@@ -385,18 +486,21 @@ class CaricaturistSignupForm(BaseVendorSignupForm):
             'website',
             'instagram',
             'facebook',
+            'testimonial_1_name',
+            'testimonial_1_event_type',
+            'testimonial_1_text',
+            'testimonial_2_name',
+            'testimonial_2_event_type',
+            'testimonial_2_text',
+            'testimonial_3_name',
+            'testimonial_3_event_type',
+            'testimonial_3_text',
             'rush_delivery_available',
             'turnaround_days',
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'act_name' in self.fields:
-            self.fields['act_name'].label = 'Your Name (private)'
-            self.fields['act_name'].widget.attrs.update({'placeholder': 'Your Name'})
-        if 'stage_name' in self.fields:
-            self.fields['stage_name'].label = 'Professional / Brand Name (this is the name that will appear on our website)'
-            self.fields['stage_name'].widget.attrs.update({'placeholder': 'Professional / Brand Name'})
         if 'act_types' in self.fields:
             self.fields['act_types'].label = 'Caricature Services'
         if 'number_of_members' in self.fields:
@@ -424,7 +528,7 @@ class PhotographerSignupForm(BaseVendorSignupForm):
         model = Photographer
         fields = [
             'act_name',
-            'stage_name',
+            'act_name_is_current',
             'act_types',
             'number_of_members',
             'home_county',
@@ -438,6 +542,15 @@ class PhotographerSignupForm(BaseVendorSignupForm):
             'website',
             'instagram',
             'facebook',
+            'testimonial_1_name',
+            'testimonial_1_event_type',
+            'testimonial_1_text',
+            'testimonial_2_name',
+            'testimonial_2_event_type',
+            'testimonial_2_text',
+            'testimonial_3_name',
+            'testimonial_3_event_type',
+            'testimonial_3_text',
             'has_second_shooter',
             'drone_available',
             'photos_included',
@@ -445,12 +558,6 @@ class PhotographerSignupForm(BaseVendorSignupForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'act_name' in self.fields:
-            self.fields['act_name'].label = 'Your Name (private)'
-            self.fields['act_name'].widget.attrs.update({'placeholder': 'Your Name'})
-        if 'stage_name' in self.fields:
-            self.fields['stage_name'].label = 'Professional / Brand Name (this is the name that will appear on our website)'
-            self.fields['stage_name'].widget.attrs.update({'placeholder': 'Professional / Brand Name'})
         if 'act_types' in self.fields:
             self.fields['act_types'].label = 'Photography Services'
         if 'number_of_members' in self.fields:

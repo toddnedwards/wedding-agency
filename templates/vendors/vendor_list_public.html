@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load pricing %}
 
 {% block title %}All Vendors - Clink Entertainment{% endblock %}
 
@@ -13,7 +14,7 @@
                 <div class="card">
                     <h3>{{ vendor.public_name }}</h3>
                     <p class="text-muted">{{ vendor.home_county }}, {{ vendor.home_country }}</p>
-                    <p><strong>From £{{ vendor.start_price }}</strong></p>
+                    <p><strong>From £{{ vendor.start_price|agency_price }}</strong></p>
                 </div>
             {% empty %}
                 <p class="text-muted">No musicians available yet.</p>
@@ -26,7 +27,7 @@
                 <div class="card">
                     <h3>{{ vendor.public_name }}</h3>
                     <p class="text-muted">{{ vendor.home_county }}, {{ vendor.home_country }}</p>
-                    <p><strong>From £{{ vendor.start_price }}</strong></p>
+                    <p><strong>From £{{ vendor.start_price|agency_price }}</strong></p>
                 </div>
             {% empty %}
                 <p class="text-muted">No caricaturists available yet.</p>
@@ -39,7 +40,7 @@
                 <div class="card">
                     <h3>{{ vendor.public_name }}</h3>
                     <p class="text-muted">{{ vendor.home_county }}, {{ vendor.home_country }}</p>
-                    <p><strong>From £{{ vendor.start_price }}</strong></p>
+                    <p><strong>From £{{ vendor.start_price|agency_price }}</strong></p>
                 </div>
             {% empty %}
                 <p class="text-muted">No photographers available yet.</p>

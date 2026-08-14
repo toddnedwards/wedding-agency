@@ -1,22 +1,37 @@
 import logging
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.urls import reverse_lazy
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
-from django.db.models import Count, Q
+from django.db.models import Count, DecimalField, F, Q
+from django.db.models.functions import Cast
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+from django.http import JsonResponse
 from django.urls import reverse
-from urllib.parse import parse_qs, urlparse
-from .models import Enquiry, EnquiryNotification
-from .forms import EnquiryForm
-from apps.vendors.models import Musician, Caricaturist, Photographer
+from urllib.parse import parse_qs, urlparse, urlencode
+from django.utils.dateparse import parse_date
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from .models import Enquiry, EnquiryNotification, ReviewRequest, FunnelEvent
+from .forms import EnquiryForm, ReviewSubmissionForm
+from apps.vendors.models import Musician, Caricaturist, Photographer, VendorReview, VendorUnavailableDate
+from apps.vendors.constants import UK_COUNTIES
 
 logger = logging.getLogger(__name__)
+
+ALLOWED_FUNNEL_EVENTS = {
+    'vendor_card_click',
+    'check_availability_click',
+    'multi_enquiry_click',
+    'enquiry_submit',
+}
 
 
 VENDOR_MODEL_MAP = {
@@ -121,6 +136,32 @@ def _serialize_multi_act_token(selected_acts):
     )
 
 
+def _build_enquiry_initial(request):
+    """Build enquiry initial values from URL query parameters."""
+    initial = {}
+
+    event_date_raw = (request.GET.get('event_date') or request.GET.get('available_date') or '').strip()
+    if event_date_raw:
+        parsed = parse_date(event_date_raw)
+        if parsed is not None:
+            initial['event_date'] = parsed
+
+    for form_field, query_key in (
+        ('event_type', 'event_type'),
+        ('event_location', 'event_location'),
+        ('county', 'county'),
+    ):
+        value = (request.GET.get(query_key) or '').strip()
+        if value:
+            initial[form_field] = value
+
+    budget = (request.GET.get('budget') or '').strip()
+    if budget:
+        initial['details'] = f"Estimated budget: {budget}"
+
+    return initial
+
+
 class VendorListView(ListView):
     """Display list of available vendors by type"""
     template_name = 'bookings/vendor_list.html'
@@ -128,10 +169,14 @@ class VendorListView(ListView):
     paginate_by = 12
     
     def get_queryset(self):
+        self.show_unavailable_search_message = False
         vendor_type = self.kwargs.get('vendor_type')
         search_query = self.request.GET.get('q', '').strip()
         sort = self.request.GET.get('sort', 'alphabetical')
         style_filter = self.request.GET.get('style', '').strip()
+        location_filter = self.request.GET.get('location', '').strip()
+        available_date_raw = self.request.GET.get('available_date', '').strip()
+        available_date = parse_date(available_date_raw) if available_date_raw else None
 
         if vendor_type == 'musicians':
             queryset = Musician.objects.filter(is_active=True, is_approved=True)
@@ -151,27 +196,57 @@ class VendorListView(ListView):
         else:
             return []
 
+        valid_locations = dict(UK_COUNTIES)
+        if location_filter in valid_locations:
+            queryset = queryset.filter(
+                **{f'county_pricing__{location_filter}__isnull': False}
+            ).annotate(
+                region_price=Cast(
+                    F(f'county_pricing__{location_filter}'),
+                    output_field=DecimalField(max_digits=10, decimal_places=2),
+                )
+            ).exclude(region_price__lte=0)
+
+        alternatives_queryset = queryset
+
         if search_query:
             search_filter = (
                 Q(business_name__icontains=search_query)
                 | Q(act_name__icontains=search_query)
                 | Q(stage_name__icontains=search_query)
-                | Q(location__icontains=search_query)
-                | Q(bio__icontains=search_query)
                 | Q(act_types__icontains=search_query)
             )
             if vendor_type == 'musicians':
-                search_filter = search_filter | Q(instruments__icontains=search_query) | Q(genres__icontains=search_query)
+                search_filter = Q(business_name__icontains=search_query) | Q(act_name__icontains=search_query) | Q(stage_name__icontains=search_query) | Q(genres__icontains=search_query)
             queryset = queryset.filter(search_filter)
 
-        queryset = queryset.annotate(review_count=Count('reviews', distinct=True))
+        if available_date is not None:
+            unavailable_vendor_ids = set(Enquiry.objects.filter(
+                event_date=available_date,
+                status='booked',
+            ).values_list('vendor_id', flat=True))
+
+            manually_blocked_vendor_ids = VendorUnavailableDate.objects.filter(
+                date=available_date,
+            ).values_list('vendor_id', flat=True)
+            unavailable_vendor_ids.update(manually_blocked_vendor_ids)
+
+            queryset = queryset.exclude(id__in=unavailable_vendor_ids)
+
+            if search_query and not queryset.exists() and alternatives_queryset.exists():
+                queryset = alternatives_queryset.exclude(id__in=unavailable_vendor_ids)
+                self.show_unavailable_search_message = True
+
+        queryset = queryset.annotate(
+            review_count=Count('reviews', filter=Q(reviews__is_approved=True), distinct=True)
+        )
 
         if sort == 'popular':
             queryset = queryset.order_by('-review_count', 'business_name')
         elif sort == 'price_low':
-            queryset = queryset.order_by('hourly_rate', 'business_name')
+            queryset = queryset.order_by('region_price' if location_filter in valid_locations else 'hourly_rate', 'business_name')
         elif sort == 'price_high':
-            queryset = queryset.order_by('-hourly_rate', 'business_name')
+            queryset = queryset.order_by('-region_price' if location_filter in valid_locations else '-hourly_rate', 'business_name')
         else:
             queryset = queryset.order_by('business_name')
         
@@ -181,11 +256,13 @@ class VendorListView(ListView):
         context = super().get_context_data(**kwargs)
         vendor_type = self.kwargs.get('vendor_type')
         style_filter = self.request.GET.get('style', '').strip()
+        available_date_raw = self.request.GET.get('available_date', '').strip()
+        available_date = parse_date(available_date_raw) if available_date_raw else None
 
         hero_by_vendor_type = {
             'musicians': {
                 'title': 'Musicians',
-                'image': 'images/banners/musicians-hero.svg',
+                'image': 'images/banners/wedding-bands-hero.png',
             },
             'caricaturists': {
                 'title': 'Caricaturists',
@@ -231,7 +308,20 @@ class VendorListView(ListView):
         context['vendor_type'] = vendor_type
         context['vendor_hero'] = vendor_hero
         context['search_query'] = self.request.GET.get('q', '').strip()
+        context['location_value'] = self.request.GET.get('location', '').strip()
+        context['location_choices'] = UK_COUNTIES
         context['sort_option'] = self.request.GET.get('sort', 'alphabetical')
+        context['today_iso'] = timezone.localdate().isoformat()
+        context['available_date'] = available_date.isoformat() if available_date else available_date_raw
+        context['availability_filter_active'] = bool(available_date)
+        context['show_unavailable_search_message'] = self.show_unavailable_search_message
+        context['event_type_value'] = self.request.GET.get('event_type', '').strip()
+        quick_enquiry_payload = {
+            'event_date': context['available_date'],
+            'county': dict(UK_COUNTIES).get(context['location_value'], ''),
+        }
+        quick_enquiry_payload = {k: v for k, v in quick_enquiry_payload.items() if v}
+        context['quick_enquiry_query'] = urlencode(quick_enquiry_payload)
         return context
 
 
@@ -288,12 +378,45 @@ class VendorDetailView(DetailView):
             if item.youtube_url
         ]
 
+        reviews = list(vendor.reviews.filter(is_approved=True).select_related('customer', 'enquiry').all())
+        testimonial_reviews = []
+
+        for index in range(1, 4):
+            name = getattr(vendor, f'testimonial_{index}_name', '').strip()
+            event_type = getattr(vendor, f'testimonial_{index}_event_type', '').strip()
+            comment = getattr(vendor, f'testimonial_{index}_text', '').strip()
+            if not (name or event_type or comment):
+                continue
+            testimonial_reviews.append({
+                'customer_name': name or 'Client',
+                'event_type': event_type or 'Event',
+                'title': '',
+                'comment': comment,
+                'rating': 5,
+                'is_testimonial': True,
+            })
+
+        review_cards = []
+        for review in reviews:
+            review_cards.append({
+                'customer_name': review.customer_name or (review.customer.first_name if review.customer else 'Customer'),
+                'event_type': getattr(review.enquiry, 'event_type', None) or 'Event',
+                'title': review.title or 'Client review',
+                'comment': review.comment,
+                'rating': review.rating,
+                'is_testimonial': False,
+            })
+        review_cards.extend(testimonial_reviews)
+
         context['vendor_type'] = self.kwargs.get('vendor_type')
-        context['enquiry_form'] = EnquiryForm()
+        context['enquiry_form'] = EnquiryForm(initial=_build_enquiry_initial(self.request))
         context['gallery_images'] = gallery_images
         context['main_gallery_image'] = main_gallery_image
         context['gallery_video_embeds'] = gallery_video_embeds
-        context['reviews'] = vendor.reviews.select_related('customer').all()
+        context['reviews'] = review_cards
+        context['visible_reviews'] = review_cards[:3]
+        context['more_reviews'] = review_cards[3:]
+        context['display_review_count'] = len(review_cards)
         return context
 
 
@@ -339,7 +462,7 @@ class EnquiryCreateView(CreateView):
         try:
             send_mail(
                 subject,
-                message,
+                '',
                 settings.DEFAULT_FROM_EMAIL,
                 recipient_list,
                 html_message=message,
@@ -371,6 +494,8 @@ class EnquiryCreateView(CreateView):
             'event_time': enquiry.event_time,
             'event_type': enquiry.event_type,
             'event_location': enquiry.event_location,
+            'venue_name': enquiry.venue_name,
+            'county': enquiry.county,
             'details': enquiry.details,
             'special_requirements': enquiry.special_requirements,
             'selected_acts': selected_acts,
@@ -444,7 +569,7 @@ class MultiActEnquiryView(EnquiryCreateView):
             return redirect('home')
 
         context = {
-            'form': EnquiryForm(),
+            'form': EnquiryForm(initial=_build_enquiry_initial(request)),
             'selected_acts': selected_acts,
             'selected_acts_token': _serialize_multi_act_token(selected_acts),
             'is_multi_enquiry': True,
@@ -500,6 +625,51 @@ class MultiActEnquiryView(EnquiryCreateView):
         return HttpResponseRedirect(self.success_url)
 
 
+@csrf_exempt
+@require_POST
+def capture_funnel_event(request):
+    """Receive lightweight funnel events from frontend tracking."""
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'invalid_json'}, status=400)
+
+    event_name = str(payload.get('event', '')).strip()
+    if event_name not in ALLOWED_FUNNEL_EVENTS:
+        return JsonResponse({'ok': False, 'error': 'invalid_event'}, status=400)
+
+    path = str(payload.get('path', '')).strip()[:500]
+    context = str(payload.get('context', '')).strip()[:120]
+    vendor_name = str(payload.get('vendor', '')).strip()[:200]
+    vendor_type = str(payload.get('vendorType', '')).strip()[:50]
+    href = str(payload.get('href', '')).strip()[:500]
+
+    session_key = request.session.session_key or ''
+    if not session_key:
+        request.session.create()
+        session_key = request.session.session_key or ''
+
+    metadata = {}
+    for key in ('destination', 'timestamp'):
+        value = payload.get(key)
+        if value is not None:
+            metadata[key] = str(value)[:300]
+
+    FunnelEvent.objects.create(
+        event=event_name,
+        path=path,
+        context=context,
+        vendor_name=vendor_name,
+        vendor_type=vendor_type,
+        href=href,
+        session_key=session_key,
+        user=request.user if request.user.is_authenticated else None,
+        metadata=metadata,
+    )
+
+    return JsonResponse({'ok': True})
+
+
 def enquiry_confirmation(request):
     """Display enquiry confirmation page"""
     return render(request, 'bookings/enquiry_confirmation.html')
@@ -522,3 +692,56 @@ def enquiry_detail(request, pk):
         return redirect('home')
     
     return render(request, 'bookings/enquiry_detail.html', {'enquiry': enquiry})
+
+
+def submit_review(request, token):
+    """Allow customers to submit a review through a secure review-request link."""
+    review_request = get_object_or_404(ReviewRequest, token=token)
+    existing_review = VendorReview.objects.filter(enquiry=review_request.enquiry).first()
+
+    if review_request.review_submitted_at or existing_review is not None:
+        return render(
+            request,
+            'bookings/review_submission.html',
+            {
+                'review_request': review_request,
+                'already_submitted': True,
+                'form': None,
+            },
+        )
+
+    if request.method == 'POST':
+        form = ReviewSubmissionForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.vendor = review_request.vendor
+            review.enquiry = review_request.enquiry
+            review.customer = review_request.enquiry.customer_user
+            review.customer_name = review_request.customer_name
+            review.customer_email = review_request.customer_email
+            review.is_approved = False
+            review.save()
+
+            review_request.review_submitted_at = timezone.now()
+            review_request.save(update_fields=['review_submitted_at'])
+
+            return render(
+                request,
+                'bookings/review_submission.html',
+                {
+                    'review_request': review_request,
+                    'submitted': True,
+                    'form': None,
+                },
+            )
+    else:
+        form = ReviewSubmissionForm()
+
+    return render(
+        request,
+        'bookings/review_submission.html',
+        {
+            'review_request': review_request,
+            'form': form,
+        },
+    )

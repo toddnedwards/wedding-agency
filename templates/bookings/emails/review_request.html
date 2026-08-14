@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>How Was Your Event?</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f7fb; margin: 0; padding: 24px; color: #1f2937; }
+        .container { max-width: 640px; margin: 0 auto; }
+        .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; }
+        h1 { font-size: 24px; margin: 0 0 12px; color: #111827; }
+        p { margin: 0 0 12px; line-height: 1.6; }
+        .cta { display: inline-block; background: #9333ea; color: #fff !important; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; }
+        .muted { color: #6b7280; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>How Was Your Event With {{ vendor_name }}?</h1>
+            <p>Hi {{ customer_name }}, thanks again for booking through The Best Entertainment.</p>
+            <p>Your event date was {{ event_date|date:"d M Y" }}. We would love your feedback so other customers can book with confidence.</p>
+            <p>
+                <a class="cta" href="{{ review_link }}">Leave A Review</a>
+            </p>
+            <p class="muted">This link is unique to your booking and can be used once.</p>
+            <p class="muted">Kind regards,<br>The Best Entertainment Team</p>
+        </div>
+    </div>
+</body>
+</html>

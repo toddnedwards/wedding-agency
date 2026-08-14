@@ -16,6 +16,7 @@ class Vendor(models.Model):
     user = models.OneToOneField('accounts.CustomUser', on_delete=models.CASCADE)
     vendor_type = models.CharField(max_length=20, choices=VENDOR_TYPES)
     act_name = models.CharField(max_length=200, default='')
+    act_name_is_current = models.BooleanField(default=False)
     stage_name = models.CharField(max_length=200, blank=True, default='')
     slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
     act_types = models.CharField(max_length=300, blank=True, default='')
@@ -33,6 +34,16 @@ class Vendor(models.Model):
     website = models.URLField(blank=True)
     instagram = models.URLField(blank=True)
     facebook = models.URLField(blank=True)
+    county_pricing = models.JSONField(default=dict, blank=True)
+    testimonial_1_name = models.CharField(max_length=150, blank=True, default='')
+    testimonial_1_event_type = models.CharField(max_length=150, blank=True, default='')
+    testimonial_1_text = models.TextField(blank=True, default='')
+    testimonial_2_name = models.CharField(max_length=150, blank=True, default='')
+    testimonial_2_event_type = models.CharField(max_length=150, blank=True, default='')
+    testimonial_2_text = models.TextField(blank=True, default='')
+    testimonial_3_name = models.CharField(max_length=150, blank=True, default='')
+    testimonial_3_event_type = models.CharField(max_length=150, blank=True, default='')
+    testimonial_3_text = models.TextField(blank=True, default='')
     
     is_approved = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -72,6 +83,23 @@ class Vendor(models.Model):
         if self.act_name and str(self.act_name).strip():
             return self.act_name.strip()
         return self.business_name
+
+
+class VendorUnavailableDate(models.Model):
+    """Dates a vendor has manually blocked as unavailable."""
+    vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='unavailable_dates')
+    date = models.DateField()
+    note = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['date', 'id']
+        unique_together = ('vendor', 'date')
+        verbose_name = 'Vendor unavailable date'
+        verbose_name_plural = 'Vendor unavailable dates'
+
+    def __str__(self):
+        return f"{self.vendor.public_name} unavailable on {self.date}"
 
 
 class VendorMediaImage(models.Model):
@@ -340,15 +368,26 @@ class VendorPortfolioItem(models.Model):
 class VendorReview(models.Model):
     """Customer reviews for vendors"""
     vendor = models.ForeignKey('vendors.Vendor', on_delete=models.CASCADE, related_name='reviews')
-    customer = models.ForeignKey('accounts.CustomUser', on_delete=models.CASCADE)
+    enquiry = models.OneToOneField('bookings.Enquiry', on_delete=models.SET_NULL, null=True, blank=True, related_name='vendor_review')
+    customer = models.ForeignKey('accounts.CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
+    customer_name = models.CharField(max_length=200, blank=True, default='')
+    customer_email = models.EmailField(blank=True, default='')
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     title = models.CharField(max_length=200)
     comment = models.TextField()
+    is_approved = models.BooleanField(default=False)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        'accounts.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='vendor_review_moderations',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ['-created_at']
-        unique_together = ['vendor', 'customer']
     
     def __str__(self):
-        return f"{self.rating}★ - {self.vendor.business_name}"
+        return f"{self.rating}★ - {self.vendor.business_name} ({'Approved' if self.is_approved else 'Pending'})"

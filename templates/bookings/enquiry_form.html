@@ -28,7 +28,16 @@
                 </div>
             {% endif %}
 
-            <form method="post">
+            <div class="card" style="background: #f8fafc; border-color: #dbe3ec; margin-bottom: 1rem;">
+                <h3 class="mb-2" style="font-size: 1.05rem;">What happens after you submit</h3>
+                <ul style="margin: 0; padding-left: 1.2rem;">
+                    <li>Your enquiry is sent instantly to your selected act(s).</li>
+                    <li>You can track replies in My Enquiries.</li>
+                    <li>Compare responses before choosing who to book.</li>
+                </ul>
+            </div>
+
+            <form method="post" data-track-submit="enquiry_submit" data-track-context="{% if is_multi_enquiry %}multi_enquiry{% else %}enquiry_form{% endif %}">
                 {% csrf_token %}
                 {% if selected_acts_token %}
                     <input type="hidden" name="selected_acts" value="{{ selected_acts_token }}">

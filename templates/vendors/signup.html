@@ -2,32 +2,133 @@
 
 {% block title %}Vendor Sign Up - WeddingVendors{% endblock %}
 
+{% block extra_css %}
+<style>
+.vendor-signup-form .form-group {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+    border: 1px solid rgba(147, 51, 234, 0.2);
+    border-radius: 12px;
+    padding: 0.9rem;
+    margin-bottom: 0.9rem;
+}
+
+.vendor-signup-form .form-group label {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.vendor-signup-form .form-group .form-error {
+    margin-top: 0.45rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <section>
     <div class="container">
         <div class="card" style="max-width: 600px; margin: 0 auto;">
             <h2 class="text-center mb-1">Register as a {{ vendor_type|title }}</h2>
             <p class="text-center text-muted mb-4">Join our network of professional vendors</p>
+            <p class="text-center" style="margin: -0.5rem 0 1.5rem;">If you need help knowing how to get the most from your profile, <a href="{% url 'vendors:requirements_guide' %}" class="text-primary">view our guide here</a>.</p>
             
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" class="vendor-signup-form">
                 {% csrf_token %}
                 
                 {% for field in form %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {% if field.name == 'start_price' %}
-                            <div class="currency-input">
-                                <span class="currency-prefix" aria-hidden="true">£</span>
+                    {% if field.name != 'testimonial_1_name' and field.name != 'testimonial_1_event_type' and field.name != 'testimonial_1_text' and field.name != 'testimonial_2_name' and field.name != 'testimonial_2_event_type' and field.name != 'testimonial_2_text' and field.name != 'testimonial_3_name' and field.name != 'testimonial_3_event_type' and field.name != 'testimonial_3_text' and field.name != 'act_name_is_current' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% if field.name == 'act_name' and field.help_text %}
+                                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.25rem; margin-bottom: 0.45rem;">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% if field.name == 'start_price' %}
+                                <div class="currency-input">
+                                    <span class="currency-prefix" aria-hidden="true">£</span>
+                                    {{ field }}
+                                </div>
+                            {% else %}
                                 {{ field }}
-                            </div>
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
-                        {% if field.errors %}
-                            <div class="form-error">{{ field.errors }}</div>
-                        {% endif %}
-                    </div>
+                            {% endif %}
+                            {% if field.help_text and field.name != 'act_name' %}
+                                <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.35rem;">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% if field.name == 'act_name' and form.act_name_is_current %}
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.55rem;">
+                                    {{ form.act_name_is_current }}
+                                    <label for="{{ form.act_name_is_current.id_for_label }}" style="margin: 0; font-weight: 600;">{{ form.act_name_is_current.label }}</label>
+                                </div>
+                                {% if form.act_name_is_current.errors %}
+                                    <div class="form-error">{{ form.act_name_is_current.errors }}</div>
+                                {% endif %}
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="form-error">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
+
+                <div style="margin-top: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem 1rem 0.25rem; background: #fafafa;">
+                    <h3 style="margin: 0 0 0.35rem;">Please provide 3 testimonials for your work</h3>
+                    <p class="text-muted" style="margin: 0 0 1rem; font-size: 0.95rem;">Each testimonial should include the client name, event type, and their testimonial.</p>
+
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.75rem;">Testimonial 1</h4>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_1_name.id_for_label }}">{{ form.testimonial_1_name.label }}</label>
+                            {{ form.testimonial_1_name }}
+                            {% if form.testimonial_1_name.errors %}<div class="form-error">{{ form.testimonial_1_name.errors }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_1_event_type.id_for_label }}">{{ form.testimonial_1_event_type.label }}</label>
+                            {{ form.testimonial_1_event_type }}
+                            {% if form.testimonial_1_event_type.errors %}<div class="form-error">{{ form.testimonial_1_event_type.errors }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_1_text.id_for_label }}">{{ form.testimonial_1_text.label }}</label>
+                            {{ form.testimonial_1_text }}
+                            {% if form.testimonial_1_text.errors %}<div class="form-error">{{ form.testimonial_1_text.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.75rem;">Testimonial 2</h4>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_2_name.id_for_label }}">{{ form.testimonial_2_name.label }}</label>
+                            {{ form.testimonial_2_name }}
+                            {% if form.testimonial_2_name.errors %}<div class="form-error">{{ form.testimonial_2_name.errors }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_2_event_type.id_for_label }}">{{ form.testimonial_2_event_type.label }}</label>
+                            {{ form.testimonial_2_event_type }}
+                            {% if form.testimonial_2_event_type.errors %}<div class="form-error">{{ form.testimonial_2_event_type.errors }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_2_text.id_for_label }}">{{ form.testimonial_2_text.label }}</label>
+                            {{ form.testimonial_2_text }}
+                            {% if form.testimonial_2_text.errors %}<div class="form-error">{{ form.testimonial_2_text.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.75rem;">Testimonial 3</h4>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_3_name.id_for_label }}">{{ form.testimonial_3_name.label }}</label>
+                            {{ form.testimonial_3_name }}
+                            {% if form.testimonial_3_name.errors %}<div class="form-error">{{ form.testimonial_3_name.errors }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_3_event_type.id_for_label }}">{{ form.testimonial_3_event_type.label }}</label>
+                            {{ form.testimonial_3_event_type }}
+                            {% if form.testimonial_3_event_type.errors %}<div class="form-error">{{ form.testimonial_3_event_type.errors }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.testimonial_3_text.id_for_label }}">{{ form.testimonial_3_text.label }}</label>
+                            {{ form.testimonial_3_text }}
+                            {% if form.testimonial_3_text.errors %}<div class="form-error">{{ form.testimonial_3_text.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
                 
                 <button type="submit" class="btn btn-primary w-full btn-lg" style="margin-top: 1.5rem;">Register as Vendor</button>
                 

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Enquiry, EnquiryResponse, EnquiryFollowUp, EnquiryNotification
+from .models import Enquiry, EnquiryResponse, EnquiryFollowUp, EnquiryNotification, ReviewRequest, FunnelEvent
 
 @admin.register(Enquiry)
 class EnquiryAdmin(admin.ModelAdmin):
@@ -38,3 +38,19 @@ class EnquiryNotificationAdmin(admin.ModelAdmin):
     list_filter = ('notification_type', 'sent', 'sent_date')
     search_fields = ('enquiry__customer_name', 'recipient_email')
     readonly_fields = ('sent_date',)
+
+
+@admin.register(ReviewRequest)
+class ReviewRequestAdmin(admin.ModelAdmin):
+    list_display = ('enquiry', 'vendor', 'customer_email', 'scheduled_send_at', 'email_sent', 'review_submitted_at')
+    list_filter = ('email_sent', 'scheduled_send_at', 'review_submitted_at')
+    search_fields = ('customer_name', 'customer_email', 'vendor__business_name', 'enquiry__id')
+    readonly_fields = ('token', 'created_at', 'sent_at', 'review_submitted_at')
+
+
+@admin.register(FunnelEvent)
+class FunnelEventAdmin(admin.ModelAdmin):
+    list_display = ('event', 'context', 'vendor_name', 'vendor_type', 'path', 'created_at')
+    list_filter = ('event', 'context', 'vendor_type', 'created_at')
+    search_fields = ('event', 'vendor_name', 'path', 'session_key')
+    readonly_fields = ('event', 'path', 'context', 'vendor_name', 'vendor_type', 'href', 'session_key', 'user', 'metadata', 'created_at')

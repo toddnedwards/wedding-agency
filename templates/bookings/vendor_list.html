@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load pricing %}
 
 {% block title %}{{ vendor_type|title }} - WeddingVendors{% endblock %}
+{% block meta_description %}Browse trusted {{ vendor_hero.title|lower }} for weddings and events across the UK. Compare profiles, guide prices and availability with The Best Entertainment.{% endblock %}
+{% block og_title %}{{ vendor_hero.title }} for Weddings &amp; Events | The Best Entertainment{% endblock %}
+{% block og_description %}Browse trusted {{ vendor_hero.title|lower }} for weddings and events across the UK.{% endblock %}
+{% block twitter_title %}{{ vendor_hero.title }} for Weddings &amp; Events | The Best Entertainment{% endblock %}
+{% block twitter_description %}Browse trusted {{ vendor_hero.title|lower }} for weddings and events across the UK.{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -121,6 +127,60 @@
     text-shadow: 0 3px 18px rgba(0, 0, 0, 0.45);
 }
 
+.trust-note {
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
+    background: #fff;
+    padding: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.trust-note p {
+    margin: 0;
+    font-size: 0.92rem;
+}
+
+.quick-quote-card {
+    border: 1px solid var(--border-color);
+    border-radius: 0.7rem;
+    background: #fff;
+    padding: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.quick-quote-card h3 {
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+}
+
+.quick-quote-card p {
+    margin-top: 0;
+    margin-bottom: 0.8rem;
+}
+
+.availability-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.availability-pill.is-available {
+    background: #e8f7ee;
+    color: #1f7a45;
+    border: 1px solid #bde4cc;
+}
+
+.availability-pill.is-check {
+    background: #fff7e6;
+    color: #9a6600;
+    border: 1px solid #f3dfb0;
+}
+
 @media (max-width: 768px) {
     .vendor-hero-image {
         height: 170px;
@@ -180,9 +240,22 @@
 
         <div class="card mb-4 vendor-search-card">
             <form method="get" class="grid grid-3" style="align-items: end; gap: 1rem;">
-                <div class="form-group" style="margin-bottom: 0; grid-column: span 2;">
-                    <label for="vendor-search">Search Acts</label>
-                    <input id="vendor-search" type="text" name="q" value="{{ search_query }}" placeholder="Search by act name, genre, location...">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="vendor-search">Act or genre</label>
+                    <input id="vendor-search" type="text" name="q" value="{{ search_query }}" placeholder="Band name or genre">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="vendor-location">Location</label>
+                    <select id="vendor-location" name="location">
+                        <option value="">Any region</option>
+                        {% for code, label in location_choices %}
+                            <option value="{{ code }}" {% if location_value == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="vendor-available-date">Event date</label>
+                    <input id="vendor-available-date" type="date" name="available_date" value="{{ available_date }}" min="{{ today_iso }}">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="vendor-sort">Sort By</label>
@@ -199,13 +272,23 @@
                 </div>
             </form>
         </div>
-        
+
+        <div class="trust-note text-center mb-4">
+            <p><strong>Why book through us:</strong> verified acts, transparent starting prices, and one place to compare replies before you decide.</p>
+        </div>
+
+        {% if show_unavailable_search_message %}
+            <div class="card mb-4" style="text-align: center;">
+                <p style="margin: 0;">Unfortunately, your chosen act is not available on this day. Here are some of our other incredible acts that are available.</p>
+            </div>
+        {% endif %}
+
         {% if vendors %}
             <div class="grid grid-3">
                 {% for vendor in vendors %}
                     <div
                         class="card vendor-card clickable-card js-vendor-card-link"
-                        data-card-link="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}"
+                        data-card-link="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}{% if quick_enquiry_query %}?{{ quick_enquiry_query }}{% endif %}"
                         role="link"
                         tabindex="0"
                         aria-label="View {{ vendor.public_name }}"
@@ -226,7 +309,7 @@
                                     class="like-act-btn js-like-act-toggle"
                                     data-act-id="{{ vendor_type }}-{{ vendor.id }}"
                                     data-act-name="{{ vendor.public_name }}"
-                                    data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}"
+                                    data-act-url="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}{% if quick_enquiry_query %}?{{ quick_enquiry_query }}{% endif %}"
                                     data-act-type="{{ vendor_type|title }}"
                                     data-act-location="{{ vendor.location }}"
                                     data-act-image="{% if vendor.profile_image %}{{ vendor.profile_image.url }}{% endif %}"
@@ -238,21 +321,28 @@
                                 </button>
                             </div>
                             <div class="vendor-rating-price">
-                                <p class="vendor-rating" aria-label="5 out of 5 stars">★★★★★</p>
-                                <span class="badge badge-primary vendor-price-badge">
-                                    {% if vendor.start_price and vendor.start_price > 0 %}
-                                        From £{{ vendor.start_price|floatformat:0 }}
+                                <p class="vendor-rating" aria-label="5 out of 5 stars">★★★★★ ({{ vendor.review_count|add:3 }})</p>
+                                <span class="badge badge-primary vendor-price-badge text-center">
+                                    {% if vendor.region_price and vendor.region_price > 0 %}
+                                        From £{{ vendor.region_price|agency_price }}
+                                    {% elif vendor.start_price and vendor.start_price > 0 %}
+                                        From £{{ vendor.start_price|agency_price }}
                                     {% elif vendor.hourly_rate and vendor.hourly_rate > 0 %}
-                                        From £{{ vendor.hourly_rate|floatformat:0 }}
+                                        From £{{ vendor.hourly_rate|agency_price }}
                                     {% else %}
                                         Price on request
                                     {% endif %}
                                 </span>
+                                {% if availability_filter_active %}
+                                    <span class="availability-pill is-available">Available on selected date</span>
+                                {% else %}
+                                    <span class="availability-pill is-check text-center">Check date availability</span>
+                                {% endif %}
                             </div>
                             <p class="vendor-bio">{{ vendor.bio|default:'No description available yet.'|truncatewords:35 }}</p>
 
                             <div style="margin-top: 1.2rem;">
-                                <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}" class="btn btn-primary w-full">Find Out More</a>
+                                <a href="{% url 'bookings:vendor_detail' vendor_type=vendor_type slug=vendor.slug %}{% if quick_enquiry_query %}?{{ quick_enquiry_query }}{% endif %}" class="btn btn-primary w-full" data-track-event="check_availability_click" data-track-context="vendor_list" data-track-vendor="{{ vendor.public_name|escape }}" data-track-vendor-type="{{ vendor_type }}">Check Availability</a>
                             </div>
                         </div>
                     </div>
@@ -263,8 +353,8 @@
             {% if is_paginated %}
                 <div style="text-align: center; margin-top: 2rem;">
                     {% if page_obj.has_previous %}
-                        <a href="?page=1{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">First</a>
-                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">Previous</a>
+                        <a href="?page=1{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if location_value %}&location={{ location_value|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}{% if available_date %}&available_date={{ available_date|urlencode }}{% endif %}" class="btn btn-light btn-sm">First</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if location_value %}&location={{ location_value|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}{% if available_date %}&available_date={{ available_date|urlencode }}{% endif %}" class="btn btn-light btn-sm">Previous</a>
                     {% endif %}
                     
                     <span style="margin: 0 1rem;">
@@ -272,14 +362,18 @@
                     </span>
                     
                     {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">Next</a>
-                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}" class="btn btn-light btn-sm">Last</a>
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if location_value %}&location={{ location_value|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}{% if available_date %}&available_date={{ available_date|urlencode }}{% endif %}" class="btn btn-light btn-sm">Next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if location_value %}&location={{ location_value|urlencode }}{% endif %}{% if sort_option %}&sort={{ sort_option|urlencode }}{% endif %}{% if available_date %}&available_date={{ available_date|urlencode }}{% endif %}" class="btn btn-light btn-sm">Last</a>
                     {% endif %}
                 </div>
             {% endif %}
         {% else %}
             <div class="card" style="text-align: center; padding: 3rem;">
-                <p class="text-muted">No vendors available at the moment.</p>
+                {% if availability_filter_active %}
+                    <p class="text-muted">No acts are currently available on your selected date. Try another date or broaden your search.</p>
+                {% else %}
+                    <p class="text-muted">No vendors available at the moment.</p>
+                {% endif %}
             </div>
         {% endif %}
     </div>

@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Enquiry
+from apps.vendors.models import VendorReview
 
 class EnquiryForm(forms.ModelForm):
     """Form for customer to submit an enquiry"""
@@ -78,5 +79,30 @@ class EnquiryForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
                 'placeholder': 'Any special requirements or notes?',
                 'rows': 3,
+            }),
+        }
+
+
+class ReviewSubmissionForm(forms.ModelForm):
+    """Public review form completed through a signed review request link."""
+
+    class Meta:
+        model = VendorReview
+        fields = ['rating', 'title', 'comment']
+        widgets = {
+            'rating': forms.Select(
+                choices=[(5, '5 - Excellent'), (4, '4 - Very good'), (3, '3 - Good'), (2, '2 - Fair'), (1, '1 - Poor')],
+                attrs={
+                    'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
+                },
+            ),
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
+                'placeholder': 'Short review headline',
+            }),
+            'comment': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500',
+                'placeholder': 'Tell us about your experience',
+                'rows': 5,
             }),
         }

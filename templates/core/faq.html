@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Frequently Asked Questions - The Best Entertainment{% endblock %}
+{% block meta_description %}Answers to common questions about wedding entertainment pricing, booking, payments, technical requirements and artist protection.{% endblock %}
+{% block og_title %}Wedding Entertainment FAQs | The Best Entertainment{% endblock %}
+{% block og_description %}Answers to common questions about wedding entertainment pricing, booking, payments and event-day logistics.{% endblock %}
+{% block twitter_title %}Wedding Entertainment FAQs | The Best Entertainment{% endblock %}
+{% block twitter_description %}Answers to common questions about wedding entertainment pricing, booking, payments and event-day logistics.{% endblock %}
+
+{% block extra_css %}
+<style>
+.faq-intro {
+    max-width: 760px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.faq-intro h1 {
+    margin-bottom: 0.65rem;
+}
+
+.faq-intro p {
+    color: var(--text-light);
+    margin: 0;
+}
+
+.faq-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.faq-section {
+    padding: 1.25rem;
+}
+
+.faq-section h2 {
+    color: var(--primary-dark);
+    font-size: 1.45rem;
+    margin-bottom: 1rem;
+}
+
+.faq-item {
+    border-top: 1px solid var(--border-color);
+}
+
+.faq-item:last-child {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.faq-question {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.faq-question::-webkit-details-marker {
+    display: none;
+}
+
+.faq-question::after {
+    content: '+';
+    color: var(--primary-color);
+    font-size: 1.45rem;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.faq-item[open] .faq-question::after {
+    content: '−';
+}
+
+.faq-answer {
+    color: var(--text-light);
+    padding: 0 0 1rem;
+}
+
+.faq-answer p {
+    margin: 0;
+}
+
+@media (max-width: 760px) {
+    .faq-layout {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+    }
+
+    .faq-section {
+        padding: 1rem;
+    }
+
+    .faq-intro h1 {
+        font-size: 2.1rem;
+    }
+
+    .faq-question {
+        font-size: 0.95rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="faq-intro">
+            <h1>Frequently Asked Questions</h1>
+            <p>Everything you need to know before booking entertainment for your event.</p>
+        </div>
+
+        <div class="faq-layout">
+            <section class="card faq-section">
+                <h2>Pricing &amp; Quotes</h2>
+                <details class="faq-item" open>
+                    <summary class="faq-question">How does guide pricing work?</summary>
+                    <div class="faq-answer"><p>The price shown on an artist's profile is a starting estimate based on their home region. Once you submit your exact venue location, performance times, and event date, we provide an accurate, all-inclusive quote incorporating travel and scheduling.</p></div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">Are there any hidden fees?</summary>
+                    <div class="faq-answer"><p>No. Your final quote includes travel, performance fees, equipment, and insurance. The price we confirm is the exact total you pay.</p></div>
+                </details>
+            </section>
+
+            <section class="card faq-section">
+                <h2>Booking &amp; Payments</h2>
+                <details class="faq-item" open>
+                    <summary class="faq-question">How do I lock in an artist for my date?</summary>
+                    <div class="faq-answer"><p>Submit an enquiry through the artist's profile. Once we confirm their availability for your date and location, you can secure the booking by paying a deposit and signing a digital contract.</p></div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">What are the payment terms?</summary>
+                    <div class="faq-answer"><p>A deposit of 20% secures your date. The remaining balance is due prior to the event date via secure online bank transfer.</p></div>
+                </details>
+            </section>
+
+            <section class="card faq-section">
+                <h2>Event Day &amp; Technical Logistics</h2>
+                <details class="faq-item" open>
+                    <summary class="faq-question">Does the act provide their own sound and lighting equipment?</summary>
+                    <div class="faq-answer"><p>Yes. Unless stated otherwise, all our acts arrive fully self-contained with professional-grade PA systems, sound controls, and stage lighting suitable for standard event spaces.</p></div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">What requirements does the artist need from my venue?</summary>
+                    <div class="faq-answer"><p>Acts generally require standard electrical sockets, a clear, flat performance space, access to setup 60-90 minutes before performing, and standard parking access.</p></div>
+                </details>
+            </section>
+
+            <section class="card faq-section">
+                <h2>Safety &amp; Peace of Mind</h2>
+                <details class="faq-item" open>
+                    <summary class="faq-question">What happens if the act falls ill or can't perform?</summary>
+                    <div class="faq-answer"><p>Every booking is backed by our emergency contract protection. If an artist cannot perform due to unforeseen circumstances, our agency immediately coordinates a vetted replacement act of matching style and standard.</p></div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">Are your acts insured, and do they have PAT testing?</summary>
+                    <div class="faq-answer"><p>Yes. All rostered artists hold Public Liability Insurance (PLI) and up-to-date Portable Appliance Testing (PAT) certificates, which are standard requirements for most UK venues.</p></div>
+                </details>
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock %}

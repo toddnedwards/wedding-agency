@@ -38,4 +38,69 @@
             <p class="admin-alert-empty">No pending profile update requests.</p>
         {% endif %}
     </div>
+
+    <div class="admin-alert-card" style="border-left: 4px solid #0284c7;">
+        <div class="admin-alert-header">
+            <h2 class="tracking-wide uppercase text-xs">Funnel Summary</h2>
+            <span class="admin-alert-count" style="background:#e0f2fe; color:#075985;">{{ funnel_window_label }}</span>
+        </div>
+
+        <ul class="admin-alert-list" style="margin-bottom: 0.5rem;">
+            <li><strong>Card clicks:</strong> {{ funnel_card_clicks }}</li>
+            <li><strong>Availability clicks:</strong> {{ funnel_availability_clicks }}</li>
+            <li><strong>Multi-enquiry clicks:</strong> {{ funnel_multi_enquiry_clicks }}</li>
+            <li><strong>Enquiry submits:</strong> {{ funnel_enquiry_submits }}</li>
+            <li><strong>Avail → enquiry rate:</strong> {{ funnel_conversion_rate|floatformat:1 }}%</li>
+        </ul>
+
+        <div style="border: 1px solid #dbeafe; background: #f0f9ff; border-radius: 8px; padding: 0.5rem 0.6rem; margin-bottom: 0.6rem; font-size: 0.85rem;">
+            <strong>Last 24h submits:</strong> {{ funnel_last_24h_submits }}
+            <span style="color:#64748b;">(Prev 24h: {{ funnel_prev_24h_submits }})</span>
+            {% if funnel_submit_delta > 0 %}
+                <span style="color:#15803d; font-weight: 700;">+{{ funnel_submit_delta }}</span>
+            {% elif funnel_submit_delta < 0 %}
+                <span style="color:#b91c1c; font-weight: 700;">{{ funnel_submit_delta }}</span>
+            {% else %}
+                <span style="color:#475569; font-weight: 700;">0</span>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 0.6rem;">
+            <strong style="display:block; margin-bottom: 0.35rem; font-size: 0.85rem;">By vendor type (7 days)</strong>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+                <thead>
+                    <tr style="text-align:left; color:#64748b; border-bottom: 1px solid #e2e8f0;">
+                        <th style="padding: 0.2rem 0.15rem;">Type</th>
+                        <th style="padding: 0.2rem 0.15rem;">Avail</th>
+                        <th style="padding: 0.2rem 0.15rem;">Submits</th>
+                        <th style="padding: 0.2rem 0.15rem;">Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in funnel_type_breakdown %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 0.22rem 0.15rem;">{{ item.label }}</td>
+                            <td style="padding: 0.22rem 0.15rem;">{{ item.availability_clicks }}</td>
+                            <td style="padding: 0.22rem 0.15rem;">{{ item.submits }}</td>
+                            <td style="padding: 0.22rem 0.15rem;">{{ item.rate|floatformat:1 }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-bottom: 0.65rem;">
+            <strong style="display:block; margin-bottom: 0.3rem; font-size: 0.85rem;">7-day enquiry submits</strong>
+            <div style="display:flex; align-items:flex-end; gap:0.32rem; height:58px; padding:0.35rem 0.2rem; border:1px solid #e2e8f0; border-radius:8px; background:#fff;">
+                {% for point in funnel_daily_submit_series %}
+                    <div style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:0.2rem;">
+                        <div title="{{ point.day_label }}: {{ point.total }}" style="width:100%; max-width:20px; min-height:2px; height:{{ point.height_pct }}%; background:#0284c7; border-radius:4px 4px 2px 2px;"></div>
+                        <span style="font-size:0.66rem; color:#64748b;">{{ point.day_label }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <a href="{{ funnel_events_url }}" class="button">View Funnel Events</a>
+    </div>
 </section>

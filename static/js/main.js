@@ -105,6 +105,47 @@ document.querySelectorAll('.card, section').forEach(element => {
     observer.observe(element);
 });
 
+function trackFunnelEvent(eventName, payload = {}) {
+    if (!eventName) return;
+    const detail = {
+        event: eventName,
+        path: window.location.pathname,
+        timestamp: new Date().toISOString(),
+        ...payload,
+    };
+
+    if (Array.isArray(window.dataLayer)) {
+        window.dataLayer.push(detail);
+    }
+
+    document.dispatchEvent(new CustomEvent('funnel:event', { detail }));
+
+    const endpoint = document.body ? document.body.getAttribute('data-funnel-event-url') : '';
+    if (!endpoint) return;
+
+    const body = JSON.stringify(detail);
+    try {
+        if (navigator.sendBeacon) {
+            const blob = new Blob([body], { type: 'application/json' });
+            navigator.sendBeacon(endpoint, blob);
+            return;
+        }
+    } catch (error) {
+        // Fall through to fetch when sendBeacon is unavailable or fails.
+    }
+
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body,
+        credentials: 'same-origin',
+    }).catch(() => {
+        // Tracking should never block UX.
+    });
+}
+
 // Close alerts automatically
 const alerts = document.querySelectorAll('.alert');
 alerts.forEach(alert => {
@@ -127,6 +168,10 @@ clickableCards.forEach((card) => {
         if (target instanceof Element && target.closest(interactiveSelector)) {
             return;
         }
+        trackFunnelEvent('vendor_card_click', {
+            destination: href,
+            vendorName: card.getAttribute('aria-label') || '',
+        });
         window.location.href = href;
     });
 
@@ -141,6 +186,10 @@ clickableCards.forEach((card) => {
         }
 
         event.preventDefault();
+        trackFunnelEvent('vendor_card_click', {
+            destination: href,
+            vendorName: card.getAttribute('aria-label') || '',
+        });
         window.location.href = href;
     });
 });
@@ -311,14 +360,30 @@ function renderLikedActsPanel() {
             .join('|');
         const baseMultiUrl = panel.getAttribute('data-multi-enquiry-url') || '/bookings/enquiry/multi/';
         const separator = baseMultiUrl.includes('?') ? '&' : '?';
-        const multiUrl = `${baseMultiUrl}${separator}acts=${encodeURIComponent(actsToken)}`;
+        const params = new URLSearchParams();
+        params.set('acts', actsToken);
+
+        const pageParams = new URLSearchParams(window.location.search || '');
+        const carryKeys = ['event_date', 'available_date', 'event_type', 'event_location', 'county', 'budget'];
+        carryKeys.forEach((key) => {
+            const value = pageParams.get(key);
+            if (value) {
+                if (key === 'available_date' && !params.get('event_date')) {
+                    params.set('event_date', value);
+                } else {
+                    params.set(key, value);
+                }
+            }
+        });
+
+        const multiUrl = `${baseMultiUrl}${separator}${params.toString()}`;
 
         const cta = document.createElement('div');
         cta.className = 'liked-multi-enquiry';
         cta.setAttribute('data-liked-multi-enquiry', 'true');
         cta.innerHTML = `
             <p>Too many great people to choose from? Enquire for all of them now and we'll get back to you with all the best options!</p>
-            <a class="btn btn-primary" href="${multiUrl}">Enquire for all</a>
+            <a class="btn btn-primary" href="${multiUrl}" data-track-event="multi_enquiry_click" data-track-context="liked_panel">Enquire for all</a>
         `;
         panel.appendChild(cta);
     }
@@ -421,6 +486,37 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && likedPanel && likedPanel.classList.contains('open')) {
         setLikedPanelOpen(false);
     }
+});
+
+document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const tracked = target.closest('[data-track-event]');
+    if (!tracked) return;
+
+    const eventName = tracked.getAttribute('data-track-event');
+    if (!eventName) return;
+
+    trackFunnelEvent(eventName, {
+        context: tracked.getAttribute('data-track-context') || '',
+        vendor: tracked.getAttribute('data-track-vendor') || '',
+        vendorType: tracked.getAttribute('data-track-vendor-type') || '',
+        href: tracked.getAttribute('href') || '',
+    });
+});
+
+document.querySelectorAll('form[data-track-submit]').forEach((form) => {
+    form.addEventListener('submit', () => {
+        const eventName = form.getAttribute('data-track-submit');
+        if (!eventName) return;
+
+        trackFunnelEvent(eventName, {
+            context: form.getAttribute('data-track-context') || '',
+            vendor: form.getAttribute('data-track-vendor') || '',
+            vendorType: form.getAttribute('data-track-vendor-type') || '',
+        });
+    });
 });
 
 refreshLikedUi();

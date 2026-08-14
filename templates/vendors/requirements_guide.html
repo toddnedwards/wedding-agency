@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Vendor Profile Requirements | The Best Entertainment{% endblock %}
+{% block meta_description %}Prepare a high-quality vendor profile for The Best Entertainment, including images, video, testimonials, pricing and event compliance documents.{% endblock %}
+{% block og_title %}Vendor Profile Requirements | The Best Entertainment{% endblock %}
+{% block og_description %}Prepare your images, video, testimonials, pricing and compliance documents before joining our roster.{% endblock %}
+{% block twitter_title %}Vendor Profile Requirements | The Best Entertainment{% endblock %}
+{% block twitter_description %}Prepare your images, video, testimonials, pricing and compliance documents before joining our roster.{% endblock %}
+
+{% block extra_css %}
+<style>
+.vendor-guide-intro {
+    max-width: 760px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.vendor-guide-intro h1 {
+    margin-bottom: 0.65rem;
+}
+
+.vendor-guide-intro p {
+    color: var(--text-light);
+    margin: 0;
+}
+
+.vendor-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.vendor-guide-card {
+    padding: 1.25rem;
+}
+
+.vendor-guide-card h2 {
+    color: var(--primary-dark);
+    font-size: 1.45rem;
+    margin-bottom: 0.7rem;
+}
+
+.vendor-guide-card h3 {
+    font-size: 1.05rem;
+    margin: 1.15rem 0 0.35rem;
+}
+
+.vendor-guide-card h3:first-of-type {
+    margin-top: 0;
+}
+
+.vendor-guide-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.vendor-guide-list li {
+    position: relative;
+    padding: 0.42rem 0 0.42rem 1.45rem;
+    color: var(--text-light);
+}
+
+.vendor-guide-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--success);
+    font-weight: 700;
+}
+
+.vendor-guide-highlight {
+    grid-column: 1 / -1;
+    border: 1px solid rgba(147, 51, 234, 0.25);
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.08), rgba(236, 72, 153, 0.08));
+    text-align: center;
+}
+
+.vendor-guide-highlight p {
+    max-width: 760px;
+    margin: 0 auto 1rem;
+    color: var(--text-dark);
+}
+
+@media (max-width: 760px) {
+    .vendor-guide-grid {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+    }
+
+    .vendor-guide-card {
+        padding: 1rem;
+    }
+
+    .vendor-guide-highlight {
+        grid-column: auto;
+    }
+
+    .vendor-guide-intro h1 {
+        font-size: 2.1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div class="vendor-guide-intro">
+            <h1>Build a Profile Couples Can Trust</h1>
+            <p>Prepare these details before you register. Complete, professional profiles are easier to approve and give couples confidence to enquire.</p>
+        </div>
+
+        <div class="vendor-guide-grid">
+            <section class="card vendor-guide-card">
+                <h2>Registration Essentials</h2>
+                <ul class="vendor-guide-list">
+                    <li>Contact name, email address and phone number.</li>
+                    <li>A unique act name, primary service type, team size and home county.</li>
+                    <li>Your local starting price, used as the base for regional quotes.</li>
+                    <li>A concise bio of up to 250 characters explaining what you offer.</li>
+                    <li>Your experience, website and social links where available.</li>
+                    <li>Three genuine testimonials, each with a client name, event type and review.</li>
+                </ul>
+            </section>
+
+            <section class="card vendor-guide-card">
+                <h2>Profile Image Standard</h2>
+                <p class="text-muted" style="margin: 0 0 0.75rem;">Your main image is the first impression on your public profile.</p>
+                <ul class="vendor-guide-list">
+                    <li>Use one professional, high-resolution landscape image, at least 1600px wide.</li>
+                    <li>Show the full act, artist or finished work clearly in good natural or venue lighting.</li>
+                    <li>Use a sharp, recent image with no heavy filters, collages, text overlays or watermarks.</li>
+                    <li>Make sure the image represents the lineup and standard a couple will receive.</li>
+                </ul>
+                <h3>Gallery Images</h3>
+                <ul class="vendor-guide-list">
+                    <li>Have a varied gallery ready: live performance, audience energy, setup and close detail.</li>
+                    <li>Upload up to 10 strong images. Avoid duplicates, low-light phone photos and promotional graphics.</li>
+                </ul>
+            </section>
+
+            <section class="card vendor-guide-card">
+                <h2>Video Standard</h2>
+                <p class="text-muted" style="margin: 0 0 0.75rem;">Video is required to complete your profile. Add up to four YouTube links after registration.</p>
+                <ul class="vendor-guide-list">
+                    <li>Use professionally filmed footage that shows a real performance or event outcome.</li>
+                    <li>Audio must be professional and clear, ideally a direct soundboard mix or professionally recorded live audio.</li>
+                    <li>Match professional video with professional audio. Avoid distorted phone sound, muffled room audio or slideshow-only clips.</li>
+                    <li>Show the current act or service and make the performance style clear within the opening moments.</li>
+                    <li>Use public YouTube links that can be embedded and played by couples without logging in.</li>
+                </ul>
+            </section>
+
+            <section class="card vendor-guide-card">
+                <h2>Event Readiness</h2>
+                <p class="text-muted" style="margin: 0 0 0.75rem;">All acts must be ready to meet typical UK venue requirements.</p>
+                <ul class="vendor-guide-list">
+                    <li>Current Public Liability Insurance (PLI) certificate.</li>
+                    <li>Current PAT certificates for all portable electrical equipment used at events.</li>
+                    <li>Copies of both documents available to provide to the agency or venue on request.</li>
+                    <li>Accurate details of any PA system, sound engineer and lighting equipment you can provide.</li>
+                    <li>Clear setup, access, power and parking requirements for your service.</li>
+                </ul>
+            </section>
+
+            <section class="card vendor-guide-card">
+                <h2>Service Details by Category</h2>
+                <h3>Musicians</h3>
+                <ul class="vendor-guide-list">
+                    <li>List your instruments, up to five core genres and a sample setlist.</li>
+                    <li>Confirm whether you provide your own sound and lighting systems.</li>
+                </ul>
+                <h3>Photographers</h3>
+                <ul class="vendor-guide-list">
+                    <li>Explain your specialism, editing style, included photography and second-shooter or drone options.</li>
+                </ul>
+                <h3>Caricaturists</h3>
+                <ul class="vendor-guide-list">
+                    <li>Describe your drawing style, mediums, team size and typical turnaround time.</li>
+                </ul>
+            </section>
+
+            <section class="card vendor-guide-card vendor-guide-highlight">
+                <h2>Ready to Prepare Your Profile?</h2>
+                <p>Have your main image, gallery, YouTube links, testimonials, pricing and compliance certificates ready before you begin.</p>
+                <a href="{% url 'accounts:vendor_signup_choice' %}" class="btn btn-primary">Choose Your Category</a>
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock %}

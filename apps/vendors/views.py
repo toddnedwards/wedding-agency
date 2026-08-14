@@ -1,18 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import CreateView, UpdateView, ListView
+from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate, login
 from django.http import Http404
+from django.http import JsonResponse
 from django.contrib import messages
 from django.db import transaction
 from django.db import IntegrityError
-from decimal import Decimal
+from django.utils import timezone
+from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_POST
+from decimal import Decimal, InvalidOperation
 from .models import (
     Musician,
     Caricaturist,
     Photographer,
+    VendorUnavailableDate,
     VendorMediaImage,
     VendorMediaVideo,
     VendorProfileUpdateRequest,
@@ -20,6 +26,7 @@ from .models import (
     VendorProfileVideoDraft,
 )
 from .forms import MusicianSignupForm, CaricaturistSignupForm, PhotographerSignupForm
+from .constants import UK_COUNTIES
 from apps.accounts.models import CustomUser
 
 
@@ -30,6 +37,10 @@ def get_vendor_for_user(user):
         if vendor is not None:
             return vendor
     return None
+
+
+class VendorRequirementsGuideView(TemplateView):
+    template_name = 'vendors/requirements_guide.html'
 
 
 def get_profile_completion(vendor):
@@ -50,6 +61,10 @@ def get_profile_completion(vendor):
         ('Profile image', bool(vendor.profile_image)),
         ('Phone', bool(vendor.phone and str(vendor.phone).strip())),
     ]
+
+    county_pricing = vendor.county_pricing or {}
+    has_county_pricing = all(str(county_pricing.get(code, '')).strip() for code, _ in UK_COUNTIES)
+    required_checks.append(('County pricing', has_county_pricing))
 
     has_gallery = vendor.media_images.exists()
     has_videos = vendor.media_videos.exists()
@@ -133,7 +148,7 @@ class VendorDashboardView(ListView):
         
         from apps.bookings.models import Enquiry
         return Enquiry.objects.filter(vendor=vendor).order_by('-created_at')
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -159,8 +174,81 @@ class VendorDashboardView(ListView):
         while len(video_links) < 4:
             video_links.append('')
         context['video_links'] = video_links
+        today = timezone.localdate()
+        if vendor is not None:
+            from apps.bookings.models import Enquiry
+
+            busy_dates = list(
+                vendor.unavailable_dates
+                .filter(date__gte=today)
+                .values_list('date', flat=True)
+            )
+            booked_dates = list(
+                Enquiry.objects.filter(
+                    vendor=vendor,
+                    status='booked',
+                    event_date__gte=today,
+                )
+                .values_list('event_date', flat=True)
+                .distinct()
+            )
+        else:
+            busy_dates = []
+            booked_dates = []
+
+        context['busy_dates_iso'] = [value.isoformat() for value in busy_dates]
+        context['booked_dates_iso'] = [value.isoformat() for value in booked_dates]
+        context['calendar_month_count'] = 12
+        context['today_iso'] = today.isoformat()
         
         return context
+
+
+@login_required
+@require_POST
+def toggle_unavailable_date(request):
+    vendor = get_vendor_for_user(request.user)
+    if vendor is None:
+        return JsonResponse({'ok': False, 'message': 'Vendor profile not found.'}, status=404)
+
+    date_raw = (request.POST.get('date') or '').strip()
+    selected_date = parse_date(date_raw) if date_raw else None
+    if selected_date is None:
+        return JsonResponse({'ok': False, 'message': 'Please provide a valid date.'}, status=400)
+
+    if selected_date < timezone.localdate():
+        return JsonResponse({'ok': False, 'message': 'Past dates cannot be changed.'}, status=400)
+
+    from apps.bookings.models import Enquiry
+
+    is_booked = Enquiry.objects.filter(
+        vendor=vendor,
+        event_date=selected_date,
+        status='booked',
+    ).exists()
+    if is_booked:
+        return JsonResponse({
+            'ok': False,
+            'message': 'This date is already confirmed booked through the agency.',
+            'state': 'booked',
+            'date': selected_date.isoformat(),
+        }, status=409)
+
+    blocked = VendorUnavailableDate.objects.filter(vendor=vendor, date=selected_date)
+    if blocked.exists():
+        blocked.delete()
+        return JsonResponse({
+            'ok': True,
+            'state': 'available',
+            'date': selected_date.isoformat(),
+        })
+
+    VendorUnavailableDate.objects.create(vendor=vendor, date=selected_date)
+    return JsonResponse({
+        'ok': True,
+        'state': 'busy',
+        'date': selected_date.isoformat(),
+    })
 
 
 @method_decorator(login_required, name='dispatch')
@@ -206,6 +294,37 @@ class VendorProfileUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         vendor = self.get_object()
+        pending_request = (
+            VendorProfileUpdateRequest.objects
+            .filter(vendor=vendor, status=VendorProfileUpdateRequest.STATUS_PENDING)
+            .first()
+        )
+
+        if self.request.method == 'POST':
+            raw_county_pricing = {
+                code: (self.request.POST.get(f'county_price_{code}', '') or '').strip()
+                for code, _ in UK_COUNTIES
+            }
+        elif pending_request and (pending_request.field_data or {}).get('county_pricing'):
+            raw_county_pricing = {
+                code: str((pending_request.field_data or {}).get('county_pricing', {}).get(code, '') or '').strip()
+                for code, _ in UK_COUNTIES
+            }
+        else:
+            raw_county_pricing = {
+                code: str((vendor.county_pricing or {}).get(code, '') or '').strip()
+                for code, _ in UK_COUNTIES
+            }
+
+        context['county_pricing_rows'] = [
+            {
+                'code': code,
+                'name': name,
+                'value': raw_county_pricing.get(code, ''),
+            }
+            for code, name in UK_COUNTIES
+        ]
+
         context['gallery_images'] = vendor.media_images.all()[:10]
         context['main_gallery_image'] = vendor.media_images.filter(is_primary=True).first() or vendor.media_images.first()
         context['gallery_videos'] = vendor.media_videos.all()[:4]
@@ -213,11 +332,7 @@ class VendorProfileUpdateView(UpdateView):
         while len(video_links) < 4:
             video_links.append('')
         context['video_links'] = video_links
-        context['pending_profile_request'] = (
-            VendorProfileUpdateRequest.objects
-            .filter(vendor=vendor, status=VendorProfileUpdateRequest.STATUS_PENDING)
-            .first()
-        )
+        context['pending_profile_request'] = pending_request
         context['locked_profile_values'] = {
             'number_of_members': vendor.number_of_members,
             'home_county': vendor.home_county,
@@ -249,6 +364,41 @@ class VendorProfileUpdateView(UpdateView):
         vendor = self.get_object()
         editable_field_names = {f.name for f in vendor._meta.fields}
         payload = {}
+
+        county_pricing = {}
+        missing_counties = []
+        invalid_counties = []
+        for county_code, county_name in UK_COUNTIES:
+            field_name = f'county_price_{county_code}'
+            raw_value = (self.request.POST.get(field_name, '') or '').strip()
+            if not raw_value:
+                missing_counties.append(county_name)
+                continue
+            try:
+                numeric_value = Decimal(raw_value)
+                if numeric_value < 0:
+                    raise InvalidOperation()
+            except (InvalidOperation, ValueError):
+                invalid_counties.append(county_name)
+                continue
+            county_pricing[county_code] = str(numeric_value)
+
+        if missing_counties:
+            preview = ', '.join(missing_counties[:5])
+            if len(missing_counties) > 5:
+                preview = f"{preview}, and {len(missing_counties) - 5} more"
+            form.add_error(None, f'Please enter location pricing for all UK counties. Missing: {preview}.')
+
+        if invalid_counties:
+            preview = ', '.join(invalid_counties[:5])
+            if len(invalid_counties) > 5:
+                preview = f"{preview}, and {len(invalid_counties) - 5} more"
+            form.add_error(None, f'Please enter valid non-negative prices for all counties. Invalid: {preview}.')
+
+        if missing_counties or invalid_counties:
+            return self.form_invalid(form)
+
+        payload['county_pricing'] = county_pricing
 
         for key, value in form.cleaned_data.items():
             if key not in editable_field_names or key in {'id', 'user', 'vendor_ptr'}:

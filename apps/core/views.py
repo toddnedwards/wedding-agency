@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.views.generic import ListView, DetailView, TemplateView
 from django.core.mail import send_mail
 from django.contrib import messages
@@ -22,6 +23,10 @@ class AboutView(TemplateView):
 
 class ServicesView(TemplateView):
     template_name = 'core/services.html'
+
+
+class FaqView(TemplateView):
+    template_name = 'core/faq.html'
 
 
 class VibeQuizView(TemplateView):
@@ -64,6 +69,11 @@ class ContactView(TemplateView):
 
         messages.success(request, 'Your message has been sent successfully! We\'ll be in touch soon.')
         return redirect('contact')
+
+
+def robots_txt(request):
+    sitemap_url = request.build_absolute_uri('/sitemap.xml')
+    return HttpResponse(f'User-agent: *\nAllow: /\n\nSitemap: {sitemap_url}\n', content_type='text/plain')
 
 class BlogListView(ListView):
     model = BlogPost
