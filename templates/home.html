@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Home - The Best Entertainment{% endblock %}
 
@@ -122,7 +123,7 @@
         <div class="grid grid-3">
             <!-- Musicians -->
             <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}" class="card vendor-category-card vendor-category-link" aria-label="Browse Musicians">
-                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;">🎸</div>
+                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;"><img src="{% static 'images/wedding-bands-hero.png' %}" alt=""></div>
                 <h3 style="text-align: center;">Musicians</h3>
                 <p class="text-muted text-center">Piano, violin, acoustic, and more</p>
                 <div class="vendor-card-cta" style="text-align: center;">

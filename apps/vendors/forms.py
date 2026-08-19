@@ -154,6 +154,9 @@ class BaseVendorSignupForm(forms.ModelForm):
         self.fields['testimonial_3_name'].label = 'Client Name'
         self.fields['testimonial_3_event_type'].label = 'Event Type'
         self.fields['testimonial_3_text'].label = 'Testimonial'
+        if self.is_profile_edit:
+            for field_name in testimonial_fields:
+                self.fields.pop(field_name, None)
         if 'profile_image' in self.fields:
             self.fields['profile_image'].label = 'Main Profile Image'
             self.fields['profile_image'].help_text = (

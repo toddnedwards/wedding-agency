@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load pricing %}
 
 {% block title %}{{ vendor.public_name }} | Wedding Entertainment in {{ vendor.location }} | The Best Entertainment{% endblock %}
@@ -549,6 +550,10 @@
     .vendor-enquiry-card h3 {
         font-size: 1.05rem;
         line-height: 1.3;
+    }
+
+    .vendor-enquiry-card {
+        scroll-margin-top: 170px;
     }
 
     .vendor-about-title {

@@ -81,7 +81,10 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
+            const stickyHeader = document.querySelector('nav');
+            const headerOffset = stickyHeader ? stickyHeader.getBoundingClientRect().height + 16 : 16;
+            const targetTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+            window.scrollTo({ top: targetTop, behavior: 'smooth' });
         }
     });
 });

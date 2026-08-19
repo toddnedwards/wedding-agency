@@ -233,16 +233,7 @@
                 </div>
             {% endif %}
 
-            {% if gallery_videos %}
-                <div class="card mb-4">
-                    <h3 class="mb-2">Main Video</h3>
-                    <ul>
-                        {% for video in gallery_videos %}
-                            <li><a href="{{ video.youtube_url }}" target="_blank" rel="noopener">{{ video.youtube_url }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
+            
         {% endif %}
 
         {% if not profile_complete %}
@@ -277,7 +268,7 @@
             
             <div class="card text-center">
                 <div style="font-size: 2rem; color: var(--success); margin-bottom: 0.5rem;">⭐</div>
-                <h3>5.0</h3>
+                <h3>5.0 ({{ review_count }})</h3>
                 <p class="text-muted small">Your Rating</p>
             </div>
         </div>

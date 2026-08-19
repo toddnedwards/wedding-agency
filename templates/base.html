@@ -72,13 +72,6 @@
                     </div>
                     <a href="{% url 'bookings:vendor_list' vendor_type='caricaturists' %}">Caricaturists</a>
                     <a href="{% url 'bookings:vendor_list' vendor_type='photographers' %}">Photographers</a>
-                    <button type="button" class="liked-nav-btn" data-liked-toggle aria-expanded="false"
-                        aria-controls="liked-acts-panel">
-                        <span class="liked-nav-heart" aria-hidden="true">♡</span>
-                        Liked
-                        <span class="liked-count-badge" data-liked-count>0</span>
-                    </button>
-
                     {% if user.is_authenticated %}
                     <a href="#">Hi, {{ user.first_name }}</a>
                     {% if user.is_vendor %}
@@ -89,6 +82,12 @@
                     {% endif %}
                     {% endif %}
                 </div>
+                <button type="button" class="liked-nav-btn" data-liked-toggle aria-expanded="false"
+                    aria-controls="liked-acts-panel">
+                    <span class="liked-nav-heart" aria-hidden="true">♡</span>
+                    Liked
+                    <span class="liked-count-badge" data-liked-count>0</span>
+                </button>
                 <div class="hamburger">
                     <span></span>
                     <span></span>

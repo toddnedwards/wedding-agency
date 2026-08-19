@@ -163,6 +163,10 @@ class VendorDashboardView(ListView):
         context['total_enquiries'] = enquiries.count()
         context['viewed_enquiries'] = enquiries.filter(vendor_viewed=True).count()
         context['pending_enquiries'] = enquiries.filter(vendor_response='pending').count()
+        context['review_count'] = (
+            vendor.reviews.filter(is_approved=True).count() + 3
+            if vendor is not None else 3
+        )
         context['pending_profile_request'] = (
             VendorProfileUpdateRequest.objects
             .filter(vendor=vendor, status=VendorProfileUpdateRequest.STATUS_PENDING)
