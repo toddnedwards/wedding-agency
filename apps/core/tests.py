@@ -28,5 +28,5 @@ class ContactViewTests(TestCase):
         self.assertRedirects(response, reverse('contact'))
         self.assertEqual(ContactMessage.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ['enquiries@thebestentertainment.com'])
+        self.assertEqual(mail.outbox[0].to, ['info@thebestentertainment.com'])
         self.assertEqual(mail.outbox[0].reply_to, ['taylor@example.com'])
