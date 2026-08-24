@@ -1,26 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}Enquiry Confirmed - WeddingVendors{% endblock %}
+{% block title %}Request Received - The Best Entertainment{% endblock %}
 
 {% block content %}
 <section>
     <div class="container">
         <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-            <h2>Enquiry Sent Successfully!</h2>
-            <p class="text-muted mt-3">Your enquiry has been forwarded to the vendor. You'll receive updates via email soon.</p>
-            <div class="card" style="text-align: left; margin-top: 1rem; background: #f8fafc; border-color: #dbe3ec;">
-                <h3 style="font-size: 1.05rem; margin-bottom: 0.6rem;">Next steps</h3>
-                <ul style="margin: 0; padding-left: 1.2rem;">
-                    <li>Check your inbox for confirmation and vendor replies.</li>
-                    <li>Use My Enquiries to compare responses and availability.</li>
-                    <li>If needed, send enquiries to more acts to compare options.</li>
-                </ul>
-            </div>
+            <h2>Your request has been received</h2>
+            <p class="text-muted mt-3">Thank you for getting in touch. We will be in touch shortly.</p>
             
             <div class="mt-4">
-                <a href="{% url 'bookings:my_enquiries' %}" class="btn btn-primary btn-lg">View My Enquiries</a>
-                <a href="{% url 'home' %}" class="btn btn-light btn-lg" style="margin-left: 1rem;">Return Home</a>
+                <a href="{% url 'home' %}" class="btn btn-primary btn-lg">Return Home</a>
             </div>
         </div>
     </div>

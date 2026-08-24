@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.views.generic import ListView, DetailView, TemplateView
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.contrib import messages
 from django.conf import settings
 from django.db.models import Q
@@ -57,21 +57,25 @@ class ContactView(TemplateView):
 
         # Send email
         try:
-            send_mail(
+            EmailMessage(
                 subject=f'New Contact Form Submission: {subject}',
-                message=f'From: {name} ({email})\nPhone: {phone}\n\n{message}',
+                body=f'From: {name} ({email})\nPhone: {phone}\n\n{message}',
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.EMAIL_HOST_USER],
-                fail_silently=False,
-            )
-        except:
-            pass
+                to=[settings.CONTACT_EMAIL],
+                reply_to=[email],
+            ).send(fail_silently=False)
+        except Exception:
+            messages.warning(request, 'Your message was saved, but we could not send the email notification. Please try again or contact us directly.')
 
-        messages.success(request, 'Your message has been sent successfully! We\'ll be in touch soon.')
+        else:
+            messages.success(request, 'Your message has been sent successfully! We\'ll be in touch soon.')
         return redirect('contact')
 
 
 def robots_txt(request):
+    if not settings.INDEXING_ENABLED:
+        return HttpResponse('User-agent: *\nDisallow: /\n', content_type='text/plain')
+
     sitemap_url = request.build_absolute_uri('/sitemap.xml')
     return HttpResponse(f'User-agent: *\nAllow: /\n\nSitemap: {sitemap_url}\n', content_type='text/plain')
 

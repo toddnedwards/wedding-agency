@@ -2,7 +2,6 @@ import logging
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView
-from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.urls import reverse_lazy
@@ -415,7 +414,7 @@ class VendorDetailView(DetailView):
         context['gallery_video_embeds'] = gallery_video_embeds
         context['reviews'] = review_cards
         context['visible_reviews'] = review_cards[:3]
-        context['more_reviews'] = review_cards[3:]
+        context['more_reviews'] = review_cards
         context['display_review_count'] = len(review_cards)
         return context
 
@@ -673,25 +672,6 @@ def capture_funnel_event(request):
 def enquiry_confirmation(request):
     """Display enquiry confirmation page"""
     return render(request, 'bookings/enquiry_confirmation.html')
-
-
-@login_required
-def my_enquiries(request):
-    """Display user's enquiries"""
-    enquiries = Enquiry.objects.filter(customer_user=request.user).order_by('-created_at')
-    return render(request, 'bookings/my_enquiries.html', {'enquiries': enquiries})
-
-
-@login_required
-def enquiry_detail(request, pk):
-    """Display enquiry details"""
-    enquiry = get_object_or_404(Enquiry, pk=pk)
-    
-    # Check if user is customer or vendor
-    if enquiry.customer_user != request.user and enquiry.vendor.user != request.user:
-        return redirect('home')
-    
-    return render(request, 'bookings/enquiry_detail.html', {'enquiry': enquiry})
 
 
 def submit_review(request, token):

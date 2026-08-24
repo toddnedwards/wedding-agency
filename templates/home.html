@@ -5,6 +5,36 @@
 
 {% block extra_css %}
 <style>
+.home-page {
+    --home-ink: #20232b;
+    --home-muted: #6e7078;
+    --home-cream: #fffaf4;
+    --home-peach: #fff0e8;
+    --home-coral: #d95f4f;
+    --home-plum: #463044;
+}
+
+.home-page section {
+    padding: 5rem 0;
+}
+
+.home-page .container {
+    max-width: 1240px;
+}
+
+.home-page .section-title {
+    margin-bottom: 2.5rem;
+}
+
+.home-page .section-title h2 {
+    color: var(--home-plum);
+    margin-bottom: 0.5rem;
+}
+
+.home-page .section-title p {
+    color: var(--home-muted);
+}
+
 .vendor-category-link {
     display: block;
     height: 100%;
@@ -30,6 +60,14 @@
     margin-bottom: 0;
 }
 
+.vendor-category-card-image {
+    width: 100%;
+    height: 210px;
+    object-fit: cover;
+    border-radius: 0.35rem;
+    display: block;
+}
+
 .vendor-card-cta {
     margin-top: auto;
     padding-top: 1rem;
@@ -42,30 +80,221 @@
 }
 
 .trust-pill {
-    border: 1px solid var(--border-color);
-    border-radius: 0.6rem;
-    padding: 0.8rem;
-    background: #fff;
+    border: 0;
+    border-left: 3px solid var(--home-coral);
+    border-radius: 0;
+    padding: 0.55rem 1rem;
+    background: transparent;
+    color: var(--home-plum);
+    font-size: 0.92rem;
     font-weight: 600;
     text-align: center;
+}
+
+.hero {
+    position: relative;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    background-image: url("{% static 'images/banners/wedding-bands-hero.png' %}");
+    background-size: cover;
+    background-position: center 42%;
+}
+
+.hero::before {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(36, 25, 39, 0.86) 0%, rgba(36, 25, 39, 0.62) 45%, rgba(36, 25, 39, 0.15) 100%);
+    content: "";
+}
+
+.hero .container {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-copy {
+    max-width: 690px;
+    color: #fff;
+    padding: 4rem 0;
+}
+
+.hero-kicker {
+    margin-bottom: 1rem;
+    color: #ffd2bd;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    max-width: 760px;
+    margin-bottom: 1.25rem;
+    color: #fff;
+    font-size: 5rem;
+    line-height: 1.03;
+}
+
+.hero p {
+    max-width: 590px;
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.hero .btn-light {
+    border-color: transparent;
+    background: #fff8f1;
+}
+
+.hero .btn-light:last-child {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: transparent;
+    color: #fff;
+}
+
+.home-intro {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+    background: var(--home-cream);
+}
+
+.home-intro .container {
+    position: relative;
+}
+
+.home-intro .trust-strip {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.feature-section {
+    background: #fff;
+}
+
+.feature-card {
+    border: 0;
+    border-top: 3px solid var(--home-peach);
+    border-radius: 0;
+    padding: 1.75rem 1.5rem;
+    background: var(--home-cream);
+}
+
+.feature-card:hover {
+    border-top-color: var(--home-coral);
+    box-shadow: 0 16px 30px rgba(70, 48, 68, 0.1);
+}
+
+.feature-icon {
+    display: inline-flex;
+    width: 3rem;
+    height: 3rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.2rem;
+    border-radius: 50%;
+    background: var(--home-peach);
+    font-size: 1.4rem;
+}
+
+.category-section {
+    background: var(--home-peach);
+}
+
+.category-section .card {
+    border: 0;
+    border-radius: 0.35rem;
+    box-shadow: 0 8px 20px rgba(70, 48, 68, 0.08);
+}
+
+.category-section .card:hover {
+    box-shadow: 0 18px 32px rgba(70, 48, 68, 0.16);
+}
+
+.category-section h3 {
+    color: var(--home-plum);
+}
+
+.home-cta {
+    border-radius: 0.35rem !important;
+    background: var(--home-plum) !important;
+    box-shadow: 0 18px 35px rgba(70, 48, 68, 0.18);
+}
+
+.confidence-section,
+.process-section {
+    background: var(--home-cream);
+}
+
+.confidence-panel {
+    border: 0;
+    border-radius: 0.35rem;
+    background: #fff;
+}
+
+.process-step {
+    position: relative;
+    padding: 1.25rem;
+    border-top: 1px solid #e6d9d0;
+}
+
+.process-number {
+    margin-bottom: 0.7rem;
+    color: var(--home-coral);
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+@media (max-width: 768px) {
+    .home-page section {
+        padding: 3.5rem 0;
+    }
+
+    .hero {
+        min-height: 620px;
+        background-position: 62% center;
+    }
+
+    .hero h1 {
+        font-size: 3.2rem;
+    }
+
+    .home-intro .trust-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .trust-pill {
+        text-align: left;
+    }
 }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="home-page">
 <!-- Hero Section -->
 <section class="hero">
     <div class="container">
-        <h1>Unforgettable Wedding & Event Entertainment Made Easy.</h1>
-        <p>Hire handpicked wedding bands, live musicians, party DJs, photographers, and showstopping performers across the UK!</p>
-        <div class="hero-buttons">
-            <a href="#vendors" class="btn btn-light btn-lg">Browse Our Acts!</a>
-            <a href="{% url 'vibe_quiz' %}" class="btn btn-light btn-lg">Take The Vibe Quiz!</a>
+        <div class="hero-copy">
+            <div class="hero-kicker">Music, memories, magic</div>
+            <h1>Bring your celebration to life.</h1>
+            <p>Handpicked wedding bands, DJs, photographers and performers, ready to make your day feel completely yours.</p>
+            <div class="hero-buttons">
+                <a href="#vendors" class="btn btn-light btn-lg">Explore the acts</a>
+                <a href="{% url 'vibe_quiz' %}" class="btn btn-light btn-lg">Find your vibe</a>
+            </div>
         </div>
     </div>
 </section>
 
-<section style="padding-top: 0;">
+<section class="home-intro">
     <div class="container">
         <div class="trust-strip">
             <div class="trust-pill">Verified acts only</div>
@@ -76,44 +305,8 @@
     </div>
 </section>
 
-<!-- Features Section -->
-<section id="features">
-    <div class="container">
-        <div class="section-title">
-            <h2>Why Choose The Best Entertainment?</h2>
-            <p>Everything you need to plan the perfect wedding</p>
-        </div>
-        
-        <div class="grid grid-3 vendor-category-grid">
-            <div class="card">
-                <div class="text-center">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">⭐</div>
-                    <h4>Verified Professionals</h4>
-                    <p class="text-muted">All vendors are carefully vetted and approved</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="text-center">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
-                    <h4>Easy Communication</h4>
-                    <p class="text-muted">Send enquiries and get responses directly</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="text-center">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📍</div>
-                    <h4>Local Expertise</h4>
-                    <p class="text-muted">Find vendors in your area with local knowledge</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- Vendors Section -->
-<section id="vendors" style="background-color: var(--light-bg);">
+<section id="vendors" class="category-section">
     <div class="container">
         <div class="section-title">
             <h2>Our Vendor Categories</h2>
@@ -123,9 +316,9 @@
         <div class="grid grid-3">
             <!-- Musicians -->
             <a href="{% url 'bookings:vendor_list' vendor_type='musicians' %}" class="card vendor-category-card vendor-category-link" aria-label="Browse Musicians">
-                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;"><img src="{% static 'images/wedding-bands-hero.png' %}" alt=""></div>
+                <div style="margin-bottom: 1rem;"><img class="vendor-category-card-image" src="{% static 'images/banners/wedding-bands-hero.png' %}" alt=""></div>
                 <h3 style="text-align: center;">Musicians</h3>
-                <p class="text-muted text-center">Piano, violin, acoustic, and more</p>
+                <p class="text-muted text-center">Bands, Acoustic Solo and Duo Acts, DJs, Saxophone and more!</p>
                 <div class="vendor-card-cta" style="text-align: center;">
                     <span class="btn btn-primary w-full">Browse Musicians</span>
                 </div>
@@ -133,7 +326,7 @@
             
             <!-- Photographers -->
             <a href="{% url 'bookings:vendor_list' vendor_type='photographers' %}" class="card vendor-category-card vendor-category-link" aria-label="Browse Photographers">
-                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;">📸</div>
+                <div style="margin-bottom: 1rem;"><img class="vendor-category-card-image" src="{% static 'images/banners/photographers-hero.png' %}" alt=""></div>
                 <h3 style="text-align: center;">Photographers</h3>
                 <p class="text-muted text-center">Professional photography and videography</p>
                 <div class="vendor-card-cta" style="text-align: center;">
@@ -143,7 +336,7 @@
             
             <!-- Caricaturists -->
             <a href="{% url 'bookings:vendor_list' vendor_type='caricaturists' %}" class="card vendor-category-card vendor-category-link" aria-label="Browse Caricaturists">
-                <div style="font-size: 4rem; text-align: center; margin-bottom: 1rem;">🎨</div>
+                <div style="margin-bottom: 1rem;"><img class="vendor-category-card-image" src="{% static 'images/banners/caricaturists-hero.png' %}" alt=""></div>
                 <h3 style="text-align: center;">Caricaturists</h3>
                 <p class="text-muted text-center">Fun caricature drawings for your guests</p>
                 <div class="vendor-card-cta" style="text-align: center;">
@@ -154,10 +347,47 @@
     </div>
 </section>
 
+<!-- Features Section -->
+<section id="features" class="feature-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Why Choose The Best Entertainment?</h2>
+            <p>Everything you need to plan the perfect wedding</p>
+        </div>
+        
+        <div class="grid grid-3 vendor-category-grid">
+            <div class="card feature-card">
+                <div class="text-center">
+                    <div class="feature-icon">⭐</div>
+                    <h4>Verified Professionals</h4>
+                    <p class="text-muted">All vendors are carefully vetted and approved</p>
+                </div>
+            </div>
+            
+            <div class="card feature-card">
+                <div class="text-center">
+                    <div class="feature-icon">💬</div>
+                    <h4>Easy Communication</h4>
+                    <p class="text-muted">Send enquiries and get responses directly</p>
+                </div>
+            </div>
+            
+            <div class="card feature-card">
+                <div class="text-center">
+                    <div class="feature-icon">📍</div>
+                    <h4>Local Expertise</h4>
+                    <p class="text-muted">Find vendors in your area with local knowledge</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
 <!-- CTA Section -->
 <section>
     <div class="container">
-        <div class="card" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; text-align: center;">
+        <div class="card home-cta" style="color: white; text-align: center;">
             <h2 style="color: white;">Ready To Check Availability?</h2>
             <p style="margin: 1rem 0; opacity: 0.95;">Tell us your date, location and vibe, then send your enquiry to your shortlisted acts.</p>
             <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
@@ -168,9 +398,9 @@
     </div>
 </section>
 
-<section>
+<section class="confidence-section">
     <div class="container">
-        <div class="card">
+        <div class="card confidence-panel">
             <div class="section-title" style="margin-bottom: 1.25rem;">
                 <h2>Booking Confidence</h2>
                 <p>What you can expect when you book through us</p>
@@ -186,7 +416,7 @@
                 </div>
                 <div>
                     <h4 style="margin-bottom: 0.45rem;" class="text-center">Managed Process</h4>
-                    <p class="text-muted text-center" style="margin: 0;">Track enquiries in one place and compare responses with confidence.</p>
+                    <p class="text-muted text-center" style="margin: 0;">Send your enquiry and we will be in touch shortly.</p>
                 </div>
             </div>
         </div>
@@ -194,7 +424,7 @@
 </section>
 
 <!-- How It Works Section -->
-<section style="background-color: var(--light-bg);">
+<section class="process-section">
     <div class="container">
         <div class="section-title">
             <h2>How It Works</h2>
@@ -202,30 +432,31 @@
         </div>
         
         <div class="grid grid-4">
-            <div class="card text-center">
-                <div style="font-size: 2.5rem; margin-bottom: 1rem;">1️⃣</div>
+            <div class="card text-center process-step">
+                <div class="process-number">01</div>
                 <h4>Browse</h4>
                 <p class="text-muted small">Explore trusted wedding vendors</p>
             </div>
             
-            <div class="card text-center">
-                <div style="font-size: 2.5rem; margin-bottom: 1rem;">2️⃣</div>
+            <div class="card text-center process-step">
+                <div class="process-number">02</div>
                 <h4>Enquire</h4>
                 <p class="text-muted small">Send details directly to vendors</p>
             </div>
             
-            <div class="card text-center">
-                <div style="font-size: 2.5rem; margin-bottom: 1rem;">3️⃣</div>
+            <div class="card text-center process-step">
+                <div class="process-number">03</div>
                 <h4>Confirm Availability</h4>
                 <p class="text-muted small">Get responses and compare options</p>
             </div>
             
-            <div class="card text-center">
-                <div style="font-size: 2.5rem; margin-bottom: 1rem;">4️⃣</div>
+            <div class="card text-center process-step">
+                <div class="process-number">04</div>
                 <h4>Book</h4>
                 <p class="text-muted small">Confirm your bookings</p>
             </div>
         </div>
     </div>
 </section>
+</div>
 {% endblock %}

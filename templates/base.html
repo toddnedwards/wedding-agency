@@ -7,7 +7,7 @@
     {% load static %}
     <title>{% block title %}Wedding Entertainment &amp; Event Acts | The Best Entertainment{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}Discover trusted wedding bands, musicians, photographers and event acts across the UK. Compare profiles and enquire for your date.{% endblock %}">
-    <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+    <meta name="robots" content="{% block robots %}{% if INDEXING_ENABLED %}index, follow{% else %}noindex, nofollow{% endif %}{% endblock %}">
     <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="The Best Entertainment">
@@ -154,6 +154,7 @@
                         <li><a href="{% url 'blog_list' %}">Blog</a></li>
                         <li><a href="#vendors">Explore Categories</a></li>
                         <li><a href="{% url 'faq' %}">FAQ</a></li>
+                        <li><a href="{% url 'contact' %}">Contact Us</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -168,8 +169,9 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
+                    <p><a href="{% url 'contact' %}">Contact Us</a></p>
                     <p>Email: <a href="mailto:info@thebestentertainment.co.uk" target="_blank">info@thebestentertainment.co.uk</a></p>
-                    <p>Phone: +44 (0) 123 456 7890</p>
+                    <p>Phone: <a href="tel:+441234567890">+44 (0) 123 456 7890</a></p>
                     <p>Follow us on social media</p>
                     <div class="footer-social-links" aria-label="Social media links">
                         <a

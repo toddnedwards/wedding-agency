@@ -308,6 +308,16 @@
     gap: 0.9rem;
 }
 
+.more-reviews-grid .review-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.more-reviews-grid .review-card:hover,
+.more-reviews-grid .review-card:focus-within {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.14);
+}
+
 .price-highlight {
     font-size: 1.05rem;
     font-weight: 700;

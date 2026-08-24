@@ -897,14 +897,19 @@ footer {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 132px;
+    height: 72px;
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.45rem;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
     margin-bottom: 0.75rem;
 }
 
 .footer-logo {
-    width: 90px;
-    height: 90px;
+    width: 116px;
+    height: 62px;
     object-fit: contain;
-    border-radius: 0.5rem;
 }
 
 @media (max-width: 768px) {
