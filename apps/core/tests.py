@@ -30,3 +30,16 @@ class ContactViewTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ['info@thebestentertainment.com'])
         self.assertEqual(mail.outbox[0].reply_to, ['taylor@example.com'])
+
+    def test_contact_form_rejects_invalid_input_without_creating_message(self):
+        response = self.client.post(reverse('contact'), {
+            'name': 'Taylor Smith',
+            'email': 'not-an-email',
+            'phone': '01234567890',
+            'subject': 'Wedding entertainment',
+            'message': 'Please send over some options.',
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(ContactMessage.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)

@@ -5,7 +5,8 @@ from django.core.mail import EmailMessage
 from django.contrib import messages
 from django.conf import settings
 from django.db.models import Q
-from .models import BlogPost, ContactMessage
+from .forms import ContactForm
+from .models import BlogPost
 from apps.vendors.models import Musician, Caricaturist, Photographer
 
 class HomeView(TemplateView):
@@ -35,34 +36,27 @@ class VibeQuizView(TemplateView):
 class ContactView(TemplateView):
     template_name = 'core/contact.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = ContactForm()
+        return context
+
     def post(self, request, *args, **kwargs):
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone', '')
-        subject = request.POST.get('subject')
-        message = request.POST.get('message')
+        form = ContactForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, 'Please check the form and try again.')
+            return self.render_to_response(self.get_context_data(form=form), status=400)
 
-        if not all([name, email, subject, message]):
-            messages.error(request, 'Please fill in all required fields.')
-            return redirect('contact')
-
-        # Save to database
-        ContactMessage.objects.create(
-            name=name,
-            email=email,
-            phone=phone,
-            subject=subject,
-            message=message
-        )
+        contact_message = form.save()
 
         # Send email
         try:
             EmailMessage(
-                subject=f'New Contact Form Submission: {subject}',
-                body=f'From: {name} ({email})\nPhone: {phone}\n\n{message}',
+                subject=f'New Contact Form Submission: {contact_message.subject}',
+                body=f'From: {contact_message.name} ({contact_message.email})\nPhone: {contact_message.phone}\n\n{contact_message.message}',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[settings.CONTACT_EMAIL],
-                reply_to=[email],
+                reply_to=[contact_message.email],
             ).send(fail_silently=False)
         except Exception:
             messages.warning(request, 'Your message was saved, but we could not send the email notification. Please try again or contact us directly.')
