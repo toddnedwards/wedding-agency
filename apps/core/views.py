@@ -38,7 +38,7 @@ class ContactView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = ContactForm()
+        context.setdefault('form', ContactForm())
         return context
 
     def post(self, request, *args, **kwargs):

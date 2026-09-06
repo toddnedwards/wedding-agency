@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Blog - Clink Entertainment{% endblock %}
+{% block title %}Blog - The Best Entertainment{% endblock %}
 {% block meta_description %}Wedding entertainment ideas, planning advice and inspiration from The Best Entertainment.{% endblock %}
 {% block og_title %}Wedding Entertainment Ideas &amp; Advice | The Best Entertainment{% endblock %}
 {% block og_description %}Wedding entertainment ideas, planning advice and inspiration from The Best Entertainment.{% endblock %}
@@ -104,7 +104,7 @@
                         {% if post.featured_image %}
                             <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
                         {% else %}
-                            <img src="{% static 'images/logo.webp' %}" alt="Clink Entertainment blog image">
+                            <img src="{% static 'images/logo.webp' %}" alt="The Best Entertainment blog image">
                         {% endif %}
                     </a>
                 </article>

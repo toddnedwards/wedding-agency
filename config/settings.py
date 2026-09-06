@@ -11,7 +11,7 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,.app.github.dev',
+    default='localhost,127.0.0.1,.app.github.dev,.railway.app,.up.railway.app',
     cast=Csv(),
 )
 
@@ -75,6 +75,7 @@ DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
         conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
@@ -130,7 +131,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://*.railway.app,https://*.up.railway.app',
+    cast=Csv(),
+)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 INDEXING_ENABLED = config('INDEXING_ENABLED', default=False, cast=bool)
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
@@ -140,6 +146,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='info@thebestentertainment.c
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='info@thebestentertainment.co.uk')
 ADMIN_EMAIL = config('ADMIN_EMAIL', default='info@thebestentertainment.co.uk')
 CONTACT_EMAIL = config('CONTACT_EMAIL', default='info@thebestentertainment.com')
