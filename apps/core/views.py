@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.db.models import Q
 import logging
+from .email_delivery import send_contact_notification
 from .forms import ContactForm
 from .models import BlogPost
 from apps.vendors.models import Musician, Caricaturist, Photographer
@@ -55,13 +56,7 @@ class ContactView(TemplateView):
 
         # Send email
         try:
-            EmailMessage(
-                subject=f'New Contact Form Submission: {contact_message.subject}',
-                body=f'From: {contact_message.name} ({contact_message.email})\nPhone: {contact_message.phone}\n\n{contact_message.message}',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[settings.CONTACT_EMAIL],
-                reply_to=[contact_message.email],
-            ).send(fail_silently=False)
+            send_contact_notification(contact_message)
         except Exception:
             logger.exception(
                 'Could not send contact form notification for message %s using %s via %s:%s.',

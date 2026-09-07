@@ -2,8 +2,10 @@ from django.template import Context, Template
 from django.core import mail
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
+from .email_delivery import send_contact_notification
 from .email_backend import IPv4SMTP
 from .models import ContactMessage
 
@@ -26,6 +28,31 @@ class IPv4SMTPTests(SimpleTestCase):
 
         gethostbyname.assert_called_once_with('smtp.hostinger.com')
         create_connection.assert_called_once_with(('172.65.255.143', 587), 30, None)
+
+
+@override_settings(
+    RESEND_API_KEY='re_test_key',
+    RESEND_FROM_EMAIL='The Best Entertainment <info@thebestentertainment.co.uk>',
+)
+class ResendContactNotificationTests(SimpleTestCase):
+    @patch('apps.core.email_delivery.urlopen')
+    def test_sends_contact_notification_through_resend(self, urlopen):
+        response = MagicMock(status=200)
+        urlopen.return_value.__enter__.return_value = response
+        contact_message = SimpleNamespace(
+            name='Taylor Smith',
+            email='taylor@example.com',
+            phone='01234567890',
+            subject='Wedding entertainment',
+            message='Please send over some options.',
+        )
+
+        send_contact_notification(contact_message)
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.full_url, 'https://api.resend.com/emails')
+        self.assertEqual(request.get_header('Authorization'), 'Bearer re_test_key')
+        self.assertEqual(urlopen.call_args.kwargs['timeout'], 30)
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
