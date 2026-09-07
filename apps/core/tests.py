@@ -2,7 +2,9 @@ from django.template import Context, Template
 from django.core import mail
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+from unittest.mock import patch
 
+from .email_backend import IPv4SMTP
 from .models import ContactMessage
 
 
@@ -12,6 +14,18 @@ class AgencyPriceFilterTests(SimpleTestCase):
 
         self.assertEqual(template.render(Context({'price': '100.00'})), '120')
         self.assertEqual(template.render(Context({'price': '100.01'})), '121')
+
+
+class IPv4SMTPTests(SimpleTestCase):
+    @patch('apps.core.email_backend.socket.create_connection')
+    @patch('apps.core.email_backend.socket.gethostbyname', return_value='172.65.255.143')
+    def test_connects_to_the_ipv4_address(self, gethostbyname, create_connection):
+        client = IPv4SMTP()
+        gethostbyname.reset_mock()
+        client._get_socket('smtp.hostinger.com', 587, 30)
+
+        gethostbyname.assert_called_once_with('smtp.hostinger.com')
+        create_connection.assert_called_once_with(('172.65.255.143', 587), 30, None)
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')

@@ -139,7 +139,7 @@ CSRF_TRUSTED_ORIGINS = config(
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 INDEXING_ENABLED = config('INDEXING_ENABLED', default=False, cast=bool)
 
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='apps.core.email_backend.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.hostinger.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='info@thebestentertainment.co.uk')
