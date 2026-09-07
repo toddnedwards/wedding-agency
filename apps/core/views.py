@@ -5,9 +5,13 @@ from django.core.mail import EmailMessage
 from django.contrib import messages
 from django.conf import settings
 from django.db.models import Q
+import logging
 from .forms import ContactForm
 from .models import BlogPost
 from apps.vendors.models import Musician, Caricaturist, Photographer
+
+
+logger = logging.getLogger(__name__)
 
 class HomeView(TemplateView):
     template_name = 'home.html'
@@ -59,6 +63,7 @@ class ContactView(TemplateView):
                 reply_to=[contact_message.email],
             ).send(fail_silently=False)
         except Exception:
+            logger.exception('Could not send contact form notification for message %s.', contact_message.pk)
             messages.warning(request, 'Your message was saved, but we could not send the email notification. Please try again or contact us directly.')
 
         else:
