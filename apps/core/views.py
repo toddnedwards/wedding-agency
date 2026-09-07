@@ -63,7 +63,13 @@ class ContactView(TemplateView):
                 reply_to=[contact_message.email],
             ).send(fail_silently=False)
         except Exception:
-            logger.exception('Could not send contact form notification for message %s.', contact_message.pk)
+            logger.exception(
+                'Could not send contact form notification for message %s using %s via %s:%s.',
+                contact_message.pk,
+                settings.EMAIL_BACKEND,
+                settings.EMAIL_HOST,
+                settings.EMAIL_PORT,
+            )
             messages.warning(request, 'Your message was saved, but we could not send the email notification. Please try again or contact us directly.')
 
         else:
