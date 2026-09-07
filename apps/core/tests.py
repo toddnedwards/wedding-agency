@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from .email_delivery import send_contact_notification
-from .email_backend import IPv4SMTP
+from .email_backend import EmailBackend, IPv4SMTP, IPv4SMTPSSL
 from .models import ContactMessage
 
 
@@ -28,6 +28,16 @@ class IPv4SMTPTests(SimpleTestCase):
 
         gethostbyname.assert_called_once_with('smtp.hostinger.com')
         create_connection.assert_called_once_with(('172.65.255.143', 587), 30, None)
+
+    def test_uses_ssl_client_when_implicit_ssl_is_enabled(self):
+        backend = EmailBackend(use_ssl=True, use_tls=False)
+
+        self.assertIs(backend.connection_class, IPv4SMTPSSL)
+
+    def test_uses_starttls_client_when_implicit_ssl_is_disabled(self):
+        backend = EmailBackend(use_ssl=False)
+
+        self.assertIs(backend.connection_class, IPv4SMTP)
 
 
 @override_settings(
